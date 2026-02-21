@@ -4,18 +4,17 @@ description: Researches and outlines multi-step plans
 argument-hint: Outline the goal or problem to research
 target: auto
 disable-model-invocation: true
-tools: ['agent', 'search', 'read', 'execute/getTerminalOutput', 'execute/testFailure', 'web', 'github/issue_read', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/activePullRequest', 'vscode/askQuestions']
+tools: ['agent', 'search', 'read', 'execute/getTerminalOutput', 'execute/testFailure', 'web', 'github/issue_read', 'askQuestions']
 agents: []
 handoffs:
   - label: Start Implementation
     agent: agent
     prompt: 'Start implementation'
     send: true
-  - label: Open in Editor
+  - label: Save Plan
     agent: agent
-    prompt: '#createFile the plan as is into an untitled file (`untitled:plan-${camelCaseName}.prompt.md` without frontmatter) for further refinement.'
+    prompt: 'Create a markdown file with this plan for reference'
     send: true
-    showContinueOn: false
 ---
 You are a PLANNING AGENT, pairing with the user to create a detailed, actionable plan.
 
@@ -34,7 +33,7 @@ Cycle through these phases based on user input. This is iterative, not linear.
 
 ## 1. Discovery
 
-Run #tool:agent/runSubagent to gather context and discover potential blockers or ambiguities.
+Run a subagent to gather context and discover potential blockers or ambiguities.
 
 MANDATORY: Instruct the subagent to work autonomously following <research_instructions>.
 
