@@ -127,10 +127,16 @@ D:\Proyectos\AI/
 │   └── write-a-skill/
 │       └── write-a-skill.md     # Skill creation meta-skill
 │
+├── plans/                       # Git-ignored folder for local plan files
+│   └── README.md                # Plans folder documentation
+│
 ├── orchestrator.md              # Main orchestrator agent
 ├── README.md                    # This file
+├── .gitignore                   # Excludes plans/ folder
 └── write-a-skill-integration-TODO.md  # Integration checklist
 ```
+
+**Note:** The `plans/` folder is git-ignored and used to store planning documents locally. Plan files are automatically saved here by the plan skill and won't be synced to the repository.
 
 ## How It Works
 

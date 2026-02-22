@@ -96,7 +96,8 @@ The final plan should be:
 - **Actionable** — clear steps with file/symbol refs
 - **Complete** — no ambiguity, ready to execute
 
-After approval, ALWAYS create a `.md` file with the plan for reference.
+After approval, ALWAYS create a `.md` file in the `plans/` folder with the plan for reference.
+Save all plan files to `plans/plan-{descriptive-name}.md` using kebab-case (e.g., `plans/plan-jwt-auth.md`).
 
 Keep iterating until explicit approval.
 </workflow>
@@ -126,6 +127,7 @@ Rules:
 - Ask critical questions via askQuestions tool BEFORE presenting plan
 - List remaining open questions that need user decision
 - Target 5-10 steps max (combine where logical)
+- **File naming**: Save plans to `plans/plan-{short-description}.md` using kebab-case
 </plan_style_guide>
 
 ## Examples
