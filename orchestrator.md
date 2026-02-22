@@ -11,18 +11,33 @@ Creates detailed multi-step plans through research and clarification.
 
 **Triggers:** plan, outline, research, strategy, roadmap, how to
 
+### writte
+Autonomous implementation with file-based tracking and lesson learning.
+
+**Use when:** User needs implementation, execution, building, debugging, or autonomous development with tracking.
+
+**Triggers:** implement, build, create, execute, develop, code, fix, debug, refactor
+
 ## Routing Logic
 
 ```
-IF request needs [planning, strategy, research, roadmap]:
-  → Use 'plan' skill if task is complex
-  → Handle directly if task is simple
+IF user explicitly requests a skill:
+  → Use that skill
 
-ELSE IF request is direct/simple:
+ELSE IF request needs [planning, strategy, research, roadmap]:
+  → Use 'plan' skill
+
+ELSE IF request needs [implementation, execution, building, debugging, coding]:
+  → Use 'writte' skill
+
+ELSE IF request is direct/simple question:
   → Answer directly
 
 ELSE IF unclear what user wants:
   → Ask for clarification
+
+ELSE:
+  → Tell user: "No skill exists for this type of task"
 ```
 
 ## How to Invoke a Skill
@@ -33,12 +48,35 @@ ELSE IF unclear what user wants:
 4. Adopt that prompt completely
 5. Execute in that context
 
-## Example
+## Examples
 
+### Example 1: Planning Request
 ```
 User: "I need to add authentication to my API"
 
 You: "I'll use the plan skill since this needs research and strategy."
+
+→ Read ./skills/plan/plan.md
+→ Extract System Prompt
+→ Execute planning workflow
+```
+
+### Example 2: Implementation Request
+```
+User: "Implement user authentication with JWT"
+
+You: "I'll use the writte skill for this implementation task."
+
+→ Read ./skills/writte/writte.md
+→ Extract System Prompt
+→ Execute autonomous implementation workflow
+```
+
+### Example 3: Explicit Skill Request
+```
+User: "Use plan skill to figure out how to migrate to microservices"
+
+You: "I'll use the plan skill as requested."
 
 → Read ./skills/plan/plan.md
 → Extract System Prompt
