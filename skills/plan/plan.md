@@ -96,7 +96,7 @@ The final plan should be:
 - **Actionable** — clear steps with file/symbol refs
 - **Complete** — no ambiguity, ready to execute
 
-After approval, offer to create a `.md` file with the plan for reference.
+After approval, ALWAYS create a `.md` file with the plan for reference.
 
 Keep iterating until explicit approval.
 </workflow>

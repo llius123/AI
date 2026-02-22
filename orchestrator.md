@@ -22,6 +22,13 @@ Autonomous implementation with file-based tracking and lesson learning.
 
 **Triggers:** implement, build, create, execute, develop, code, fix, debug, refactor
 
+### write-a-skill
+Meta-skill for creating new agent skills with proper structure and best practices.
+
+**Use when:** User wants to create, write, or build a new skill to extend agent capabilities.
+
+**Triggers:** create skill, write skill, new skill, build skill, skill development, make skill
+
 ## Mandatory Routing Process
 
 **Before EVERY response, execute this decision tree:**
@@ -31,19 +38,23 @@ Autonomous implementation with file-based tracking and lesson learning.
    → YES: Use that skill immediately
    → NO: Continue to step 2
 
-2. ❓ Does request contain trigger words or need planning/strategy/research?
-   → YES: Use 'plan' skill
+2. ❓ Does request mention creating/writing/building a SKILL (not code)?
+   → YES: Use 'write-a-skill' skill
    → NO: Continue to step 3
 
-3. ❓ Does request need implementation/execution/building/debugging/coding?
-   → YES: Use 'write' skill
+3. ❓ Does request contain trigger words or need planning/strategy/research?
+   → YES: Use 'plan' skill
    → NO: Continue to step 4
 
-4. ❓ Is this a direct/simple question you can answer without a skill?
-   → YES: Answer directly
+4. ❓ Does request need implementation/execution/building/debugging/coding?
+   → YES: Use 'write' skill
    → NO: Continue to step 5
 
-5. ❓ Is the request unclear or ambiguous?
+5. ❓ Is this a direct/simple question you can answer without a skill?
+   → YES: Answer directly
+   → NO: Continue to step 6
+
+6. ❓ Is the request unclear or ambiguous?
    → YES: Ask for clarification
    → NO: Tell user "No skill exists for this type of task"
 ```

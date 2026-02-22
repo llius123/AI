@@ -68,17 +68,68 @@ The plan skill will:
 → Iterate with you until approved
 ```
 
+### write
+**Location:** `skills/write/write.md`
+
+**What it does:** Autonomous implementation with senior engineer standards
+
+**When to use:**
+- You need to implement features or fix bugs
+- Building new functionality autonomously
+- Debugging and refactoring code
+- Multi-file changes required
+- Production-quality code needed
+
+**Example:**
+```
+"Implement user authentication in the API"
+
+The write skill will:
+→ Scan codebase context
+→ Execute changes with root cause analysis
+→ Apply defensive programming practices
+→ Run diagnostics and verification
+→ Deliver production-ready code
+```
+
+### write-a-skill
+**Location:** `skills/write-a-skill/write-a-skill.md`
+
+**What it does:** Creates new agent skills with proper structure and best practices
+
+**When to use:**
+- You want to create a new specialized skill
+- Extending the orchestrator's capabilities
+- Need structured skill with routing optimization
+- Building skills with bundled resources
+
+**Example:**
+```
+"Create a skill for code review and quality analysis"
+
+The write-a-skill skill will:
+→ Ask about review criteria and requirements
+→ Determine structure (main file, scripts, references)
+→ Create properly formatted skill file
+→ Ensure routing-optimized descriptions
+→ Validate against quality checklist
+```
+
 ## Project Structure
 
 ```
 D:\Proyectos\AI/
 ├── skills/
-│   └── plan/
-│       └── plan.md          # Planning skill
+│   ├── plan/
+│   │   └── plan.md              # Planning skill
+│   ├── write/
+│   │   └── write.md             # Implementation skill
+│   └── write-a-skill/
+│       └── write-a-skill.md     # Skill creation meta-skill
 │
-├── orchestrator.md          # Main orchestrator agent
-├── README.md                # This file
-└── TODO.md                  # Implementation checklist
+├── orchestrator.md              # Main orchestrator agent
+├── README.md                    # This file
+└── write-a-skill-integration-TODO.md  # Integration checklist
 ```
 
 ## How It Works
@@ -159,13 +210,21 @@ This orchestrator works with any IDE or tool that can:
 - "Outline the steps to add real-time features to my app"
 - "Research and plan a migration from REST to GraphQL"
 
+### Implementation & Development
+- "Implement user authentication in the API"
+- "Fix the bug in the payment processing flow"
+- "Refactor the database query layer for better performance"
+
+### Skill Development
+- "Create a skill for database migrations"
+- "Build a skill for code review and quality analysis"
+- "Write a skill for API documentation generation"
+
 ### Future Skills (coming soon)
-- **implement** - Feature implementation
-- **debug** - Debugging assistance
-- **test** - Test generation
-- **refactor** - Code refactoring
+- **debug** - Dedicated debugging assistance
+- **test** - Test generation and coverage
 - **document** - Documentation generation
-- **review** - Code review
+- **review** - Code review and quality analysis
 
 ## FAQ
 
@@ -201,10 +260,11 @@ If you need MCP or CLI later, you can always build adapters on top of these Mark
 - ✅ Plan skill
 - ✅ Documentation
 
-### Phase 2 (Next)
-- [ ] Skill template for easy creation
-- [ ] More specialized skills (implement, debug, test, refactor)
-- [ ] Improved routing logic
+### Phase 2 (Current)
+- ✅ Write skill (implementation)
+- ✅ Write-a-skill meta-skill
+- ✅ Improved routing logic with skill-specific prioritization
+- [ ] More specialized skills (debug, test, review)
 
 ### Phase 3 (Future)
 - [ ] Skill categories and organization
