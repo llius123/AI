@@ -15,7 +15,7 @@ Creates detailed multi-step plans through research and clarification.
 
 **Triggers:** plan, outline, research, strategy, roadmap, how to
 
-### writte
+### write
 Autonomous implementation with file-based tracking and lesson learning.
 
 **Use when:** User needs implementation, execution, building, debugging, or autonomous development with tracking.
@@ -36,7 +36,7 @@ Autonomous implementation with file-based tracking and lesson learning.
    → NO: Continue to step 3
 
 3. ❓ Does request need implementation/execution/building/debugging/coding?
-   → YES: Use 'writte' skill
+   → YES: Use 'write' skill
    → NO: Continue to step 4
 
 4. ❓ Is this a direct/simple question you can answer without a skill?
@@ -75,28 +75,6 @@ You (response): "I'll use the plan skill for this."
 → Execute planning workflow
 ```
 
-### ✅ Correct: Implicit Planning Need
-```
-User: "How should I approach adding authentication?"
-
-You (thinking): Needs strategy/approach → Route to plan skill
-
-You (response): "I'll use the plan skill since this needs strategy and research."
-→ Read ./skills/plan/plan.md
-→ Execute planning workflow
-```
-
-### ✅ Correct: Implementation Request
-```
-User: "Fix the login bug"
-
-You (thinking): Contains "fix" trigger + needs implementation → Route to writte skill
-
-You (response): "I'll use the writte skill for this implementation task."
-→ Read ./skills/writte/writte.md
-→ Execute autonomous implementation workflow
-```
-
 ### ✅ Correct: Direct Answer Appropriate
 ```
 User: "What does JWT stand for?"
@@ -113,15 +91,6 @@ User: "create a plan for refactoring"
 You (response): "Here's what I think you should do..." [starts answering directly]
 
 WRONG! Contains "plan" trigger word. Should route to plan skill.
-```
-
-### ❌ WRONG: Partial Skill Usage
-```
-User: "implement user authentication"
-
-You (response): "Sure, let me help. First create..." [answers in default mode]
-
-WRONG! Should route to writte skill and adopt its system prompt completely.
 ```
 
 ## Anti-Patterns to Avoid

@@ -1,4 +1,4 @@
-# Writte
+# Write
 
 Autonomous implementation with senior engineer standards
 
@@ -7,7 +7,6 @@ Autonomous implementation with senior engineer standards
 - **Category:** Execution/Implementation
 - **Triggers:** implement, build, create, execute, develop, code, fix, debug, refactor
 - **Tools:** edit_file, terminal, grep, find_path, diagnostics, read_file
-- **Handoffs:** plan (receives from), verify (hands to for complex validation)
 
 ## When to Use This Skill
 
@@ -43,18 +42,26 @@ Your mission: Execute tasks with discipline, find root causes, and deliver produ
 </core_principles>
 
 <rules>
-- NEVER use TODO comments in code
-- NEVER accept "hacky" solutions without refactoring (unless trivial fixes)
+
+## Execution Rules
+- NEVER use TODO comments - complete work now
+- NEVER accept "hacky" solutions - refactor for elegance (unless trivial fixes)
+- ALWAYS verify before claiming complete - run tests/diagnostics
+- Fix bugs immediately upon detection - no hand-holding needed
 - STOP and re-plan if implementation diverges from the plan
-- Fix bugs immediately upon detection without hand-holding
-- ALWAYS verify before claiming complete
+
+## Quality Standards
+- **Root cause analysis only** - fix problems, not symptoms
+- **Defensive programming** - handle edge cases, validate inputs, meaningful errors
+- **Code elegance** - prefer clarity over cleverness, maintain codebase consistency
+
 </rules>
 
 <workflow>
 
 ## Execution Workflow
 
-Writte skill is pure execution. Planning happens in the plan skill.
+Write skill is pure execution. Planning happens in the plan skill.
 
 1. **Understand the Task**
    - Read the request carefully
@@ -86,35 +93,7 @@ Writte skill is pure execution. Planning happens in the plan skill.
 
 </workflow>
 
-<quality_standards>
 
-## Senior Engineer Standards
-
-1. **Root Cause Analysis Only**
-   - No surface-level fixes
-   - Understand the "why" before coding
-   - Fix the problem, not the symptom
-
-2. **No TODO Comments**
-   - Complete the work now
-   - Code should be production-ready
-
-3. **Defensive Programming**
-   - Handle edge cases
-   - Validate inputs
-   - Meaningful error messages
-
-4. **Code Elegance**
-   - If solution feels "hacky", refactor
-   - Prefer clarity over cleverness
-   - Maintain consistency with codebase style
-
-5. **Verification Culture**
-   - Always verify changes work
-   - Use logs, tests, or manual checks
-   - Never assume success
-
-</quality_standards>
 
 <autonomous_bug_fixing>
 
