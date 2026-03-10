@@ -1,2 +1,4 @@
 # Plan files - local only, not tracked in git
 plans/
+node_modules/
+.env

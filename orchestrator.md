@@ -29,6 +29,15 @@ Meta-skill for creating new agent skills with proper structure and best practice
 
 **Triggers:** create skill, write skill, new skill, build skill, skill development, make skill
 
+### figma
+Procesa diseños de Figma y extrae datos estructurados para generación de componentes.
+
+**Use when:** User provides Figma URL, wants to extract components/styles, needs Figma data for code generation, or any Figma-related processing.
+
+**Triggers:** Figma URL, process Figma, extract Figma, Figma to React, diseño Figma, Figma components
+
+**Note:** Routes to internal figma orchestrator which manages: pipeline, api-fetch, data-analyzer, and future figma-to-react skills.
+
 ## Mandatory Routing Process
 
 **Before EVERY response, execute this decision tree:**
@@ -42,22 +51,28 @@ Meta-skill for creating new agent skills with proper structure and best practice
    → YES: Use 'write-a-skill' skill
    → NO: Continue to step 3
 
-3. ❓ Does request contain trigger words or need planning/strategy/research?
-   → YES: Use 'plan' skill
+3. ❓ Does request contain Figma-related triggers (Figma URL, process Figma, extract components)?
+   → YES: Use 'figma' skill (routes to internal figma orchestrator)
    → NO: Continue to step 4
 
-4. ❓ Does request need implementation/execution/building/debugging/coding?
-   → YES: Use 'write' skill
+4. ❓ Does request contain trigger words or need planning/strategy/research?
+   → YES: Use 'plan' skill
    → NO: Continue to step 5
 
-5. ❓ Is this a direct/simple question you can answer without a skill?
-   → YES: Answer directly
+5. ❓ Does request need implementation/execution/building/debugging/coding?
+   → YES: Use 'write' skill
    → NO: Continue to step 6
 
-6. ❓ Is the request unclear or ambiguous?
+6. ❓ Is this a direct/simple question you can answer without a skill?
+   → YES: Answer directly
+   → NO: Continue to step 7
+
+7. ❓ Is the request unclear or ambiguous?
    → YES: Ask for clarification
    → NO: Tell user "No skill exists for this type of task"
 ```
+
+**Note on Figma Skills:** The `figma` skill is the entry point for all Figma workflows. It routes to an internal orchestrator which manages: `pipeline`, `api-fetch`, `data-analyzer`, and future skills like `to-react`. Use individual Figma skills only when explicitly requested.
 
 ## How to Invoke a Skill (MANDATORY PROCESS)
 
@@ -73,6 +88,18 @@ When routing triggers a skill, you MUST follow these steps exactly:
 **DO NOT** partially use a skill - adopt it completely or not at all.
 
 ## Routing Examples
+
+### ✅ Correct: Figma Request Routed
+```
+User: "Procesa este diseño de Figma: https://www.figma.com/design/..."
+
+You (thinking): Contains Figma URL → Route to figma skill
+
+You (response): "I'll use the figma skill for this."
+→ Read ./skills/figma/orchestrator.md
+→ Figma orchestrator routes to appropriate sub-skill (typically pipeline)
+→ Execute workflow
+```
 
 ### ✅ Correct: Planning Request Routed
 ```
