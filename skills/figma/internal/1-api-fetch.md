@@ -1,11 +1,16 @@
+---
+name: figma_api_fetch
+description: "Fetches raw data from Figma API for a given file and node. Internal sub-skill used by figma orchestrator."
+category: Integration/API
+tools:
+  - webfetch
+  - websearch
+internal: true
+---
+
 # Figma API Fetch
 
 Cómo hacer fetch a la API de Figma
-
-## Metadata
-
-- **Category:** Integration/API
-- **Tools:** webfetch, websearch
 
 ## How to Call Figma API
 

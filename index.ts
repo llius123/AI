@@ -1,284 +1,160 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync, statSync } from "fs";
+import { join } from "path";
 import { z } from "zod";
+import matter from "gray-matter";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Configuration ───────────────────────────────────────────────────────────
 
 const ROOT = new URL(".", import.meta.url).pathname;
+const SKILLS_DIR = join(ROOT, "skills");
 
-function loadSkill(relativePath: string): string {
-  try {
-    return readFileSync(`${ROOT}skills/${relativePath}`, "utf-8");
-  } catch {
-    return `[Error: skill file not found at skills/${relativePath}]`;
-  }
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+interface SkillParameter {
+  name: string;
+  type: string;
+  description: string;
+  required: boolean;
 }
+
+interface SkillMetadata {
+  name: string;
+  description: string;
+  parameters: SkillParameter[];
+}
+
+interface ParsedSkill extends SkillMetadata {
+  content: string;
+  filePath: string;
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function skillResult(content: string) {
   return { content: [{ type: "text" as const, text: content }] };
 }
 
-// ─── Server ─────────────────────────────────────────────────────────────────
+function getZodType(type: string): z.ZodTypeAny {
+  switch (type) {
+    case "string": return z.string();
+    case "number": return z.number();
+    case "boolean": return z.boolean();
+    case "url": return z.string().url();
+    default: return z.string();
+  }
+}
 
-const server = new McpServer({
-  name: "mis-skills-repo",
-  version: "1.0.0",
-});
+// ─── Skill Discovery & Loading ──────────────────────────────────────────────
 
-// ─── Skill: plan ─────────────────────────────────────────────────────────────
+function discoverSkills(): ParsedSkill[] {
+  const skills: ParsedSkill[] = [];
+  
+  // 1. Scan skills directory
+  const entries = readdirSync(SKILLS_DIR);
+  
+  for (const entry of entries) {
+    const entryPath = join(SKILLS_DIR, entry);
+    const stat = statSync(entryPath);
+    
+    if (!stat.isDirectory()) continue;
+    
+    // 2. Look for .md files in each subdirectory
+    // Skip subdirectories named 'internal/' - those are for orchestrator-internal use only
+    const files = readdirSync(entryPath, { recursive: true }) as string[];
+    const mdFiles = files.filter(f => f.endsWith(".md") && !f.includes("internal/"));
+    
+    for (const mdFile of mdFiles) {
+      const filePath = join(entryPath, mdFile);
+      const fileContent = readFileSync(filePath, "utf-8");
+      
+      // 3. Parse frontmatter
+      const { data: frontmatter, content } = matter(fileContent);
+      
+      // 4. Validate required fields
+      if (!frontmatter.name || !frontmatter.description || !Array.isArray(frontmatter.parameters)) {
+        console.error(`⚠️  Skipping ${filePath}: missing required frontmatter`);
+        continue;
+      }
+      
+      skills.push({
+        name: frontmatter.name,
+        description: frontmatter.description,
+        parameters: frontmatter.parameters,
+        content,
+        filePath,
+      });
+    }
+  }
+  
+  return skills;
+}
 
-server.tool(
-  "plan",
-  "Researches and creates detailed multi-step plans before implementation. Use when the user needs planning, strategy, a roadmap, or wants to understand how to approach a complex or unclear task before writing any code.",
-  {
-    task: z.string().describe("Describe the task or goal you want to plan"),
-    context: z
-      .string()
-      .optional()
-      .describe("Additional context, constraints, or relevant files/symbols"),
-  },
-  async ({ task, context }) => {
-    const skill = loadSkill("plan/plan.md");
+// ─── Skill Registration ───────────────────────────────────────────────────────
+
+function registerSkill(server: McpServer, skill: ParsedSkill) {
+  // Build Zod schema dynamically
+  const schema: Record<string, z.ZodTypeAny> = {};
+  
+  for (const param of skill.parameters) {
+    let validator = getZodType(param.type);
+    if (!param.required) {
+      validator = validator.optional();
+    }
+    schema[param.name] = validator.describe(param.description);
+  }
+  
+  // Create generic handler
+  const handler = async (params: Record<string, any>) => {
     const parts = [
-      `# Skill: Plan\n`,
-      skill,
-      `\n---\n`,
-      `## Task to plan\n${task}`,
-      context ? `\n## Additional context\n${context}` : "",
-    ];
-    return skillResult(parts.join("\n"));
-  },
-);
-
-// ─── Skill: write ────────────────────────────────────────────────────────────
-
-server.tool(
-  "write",
-  "Autonomously implements features, fixes bugs, and refactors code with senior engineer standards. Use when the user asks to implement, build, create, fix, debug, or refactor — especially for multi-file changes that require scanning the codebase.",
-  {
-    task: z
-      .string()
-      .describe("What to implement, fix, or refactor — be specific"),
-    plan: z
-      .string()
-      .optional()
-      .describe(
-        "Reference to an existing plan (from the plan skill) to execute, if any",
-      ),
-    context: z
-      .string()
-      .optional()
-      .describe("Relevant file paths, symbols, or constraints"),
-  },
-  async ({ task, plan, context }) => {
-    const skill = loadSkill("write/write.md");
-    const parts = [
-      `# Skill: Write\n`,
-      skill,
-      `\n---\n`,
-      `## Task\n${task}`,
-      plan ? `\n## Existing plan\n${plan}` : "",
-      context ? `\n## Context\n${context}` : "",
-    ];
-    return skillResult(parts.join("\n"));
-  },
-);
-
-// ─── Skill: write-a-skill ────────────────────────────────────────────────────
-
-server.tool(
-  "write_a_skill",
-  "Meta-skill for creating new agent skills with the correct structure, metadata, and routing-optimised descriptions. Use when the user wants to create, write, or build a new skill for the orchestrator.",
-  {
-    skillName: z.string().describe("Name of the new skill to create"),
-    purpose: z
-      .string()
-      .describe("What should this skill do? Describe its domain and goals"),
-    triggers: z
-      .string()
-      .optional()
-      .describe(
-        "Keywords or phrases that should route to this skill (comma-separated)",
-      ),
-    examples: z
-      .string()
-      .optional()
-      .describe("1-3 concrete example use cases for this skill"),
-  },
-  async ({ skillName, purpose, triggers, examples }) => {
-    const skill = loadSkill("write-a-skill/write-a-skill.md");
-    const parts = [
-      `# Skill: Write-a-Skill\n`,
-      skill,
-      `\n---\n`,
-      `## New skill to create`,
-      `**Name:** ${skillName}`,
-      `**Purpose:** ${purpose}`,
-      triggers ? `**Triggers:** ${triggers}` : "",
-      examples ? `\n## Examples\n${examples}` : "",
-    ];
-    return skillResult(parts.filter(Boolean).join("\n"));
-  },
-);
-
-// ─── Skill: figma / pipeline ─────────────────────────────────────────────────
-
-server.tool(
-  "figma_pipeline",
-  "Runs the complete Figma workflow in one command: fetch from Figma API → analyse → save structured JSON. Use when the user provides a Figma URL and wants to process or extract the design data without caring about the individual steps.",
-  {
-    figmaUrl: z
-      .string()
-      .url()
-      .describe(
-        "Full Figma design URL, e.g. https://www.figma.com/design/{fileId}/...?node-id={nodeId}",
-      ),
-    figmaToken: z
-      .string()
-      .describe("Figma personal access token — paste it directly in the chat"),
-    forceRefresh: z
-      .boolean()
-      .default(false)
-      .describe("Set to true to skip the cache and always fetch fresh data"),
-  },
-  async ({ figmaUrl, figmaToken, forceRefresh }) => {
-    const orchestrator = loadSkill("figma/orchestrator.md");
-    const parts = [
-      `# Skill: Figma Pipeline\n`,
-      `## Figma Domain Orchestrator\n`,
-      orchestrator,
+      `# Skill: ${skill.name}\n`,
+      skill.content,
       `\n---\n`,
       `## Execution parameters`,
-      `- **URL:** ${figmaUrl}`,
-      `- **Token:** ${figmaToken}`,
-      `- **Force refresh:** ${forceRefresh}`,
     ];
+    
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) {
+        parts.push(`- **${key}:** ${value}`);
+      }
+    }
+    
     return skillResult(parts.join("\n"));
-  },
-);
+  };
+  
+  // Register with MCP server
+  server.tool(skill.name, skill.description, schema, handler);
+  console.error(`✅ Registered skill: ${skill.name}`);
+}
 
-// ─── Skill: figma / api-fetch ────────────────────────────────────────────────
-
-server.tool(
-  "figma_api_fetch",
-  "Makes a direct call to the Figma REST API and returns the raw JSON response for a given file and node. Use when the user explicitly wants to fetch or get raw Figma API data without running the full pipeline.",
-  {
-    fileId: z
-      .string()
-      .describe(
-        "Figma file ID extracted from the URL path (e.g. 3sZE6Ke3MSPwcdrhSLQkgG)",
-      ),
-    nodeId: z
-      .string()
-      .describe(
-        "Figma node ID with colons, not hyphens (e.g. 2158:22764). Convert hyphens to colons if needed.",
-      ),
-    figmaToken: z
-      .string()
-      .describe("Figma personal access token — paste it directly in the chat"),
-  },
-  async ({ fileId, nodeId, figmaToken }) => {
-    const skill = loadSkill("figma/api-fetch.md");
-    const apiUrl = `https://api.figma.com/v1/files/${fileId}/nodes?ids=${nodeId}`;
-    const parts = [
-      `# Skill: Figma API Fetch\n`,
-      skill,
-      `\n---\n`,
-      `## Execution parameters`,
-      `- **fileId:** ${fileId}`,
-      `- **nodeId:** ${nodeId}`,
-      `- **API URL:** ${apiUrl}`,
-      `- **Token:** ${figmaToken}`,
-    ];
-    return skillResult(parts.join("\n"));
-  },
-);
-
-// ─── Skill: figma / data-analyzer ───────────────────────────────────────────
-
-server.tool(
-  "figma_data_analyzer",
-  "Processes a raw Figma API JSON response and extracts structured design data (components, colours, typography, effects). Use when the user has a raw Figma API response and wants to parse, analyse, or structure it for code generation.",
-  {
-    apiResponseOrPath: z
-      .string()
-      .describe(
-        "Either the raw Figma API JSON string or a file path pointing to a saved response",
-      ),
-    fileId: z
-      .string()
-      .optional()
-      .describe("Figma file ID (used to populate metadata in the output)"),
-    nodeId: z
-      .string()
-      .optional()
-      .describe("Figma node ID (used to populate metadata in the output)"),
-    sourceUrl: z
-      .string()
-      .optional()
-      .describe("Original Figma URL (stored in metadata for traceability)"),
-  },
-  async ({ apiResponseOrPath, fileId, nodeId, sourceUrl }) => {
-    const skill = loadSkill("figma/data-analyzer.md");
-    const parts = [
-      `# Skill: Figma Data Analyzer\n`,
-      skill,
-      `\n---\n`,
-      `## Execution parameters`,
-      `- **fileId:** ${fileId ?? "(not provided)"}`,
-      `- **nodeId:** ${nodeId ?? "(not provided)"}`,
-      `- **sourceUrl:** ${sourceUrl ?? "(not provided)"}`,
-      `\n## API response / file path\n\`\`\`\n${apiResponseOrPath}\n\`\`\``,
-    ];
-    return skillResult(parts.join("\n"));
-  },
-);
-
-// ─── Skill: figma / to-plan ────────────────────────────────────────────────
-
-server.tool(
-  "figma_to_plan",
-  "Generates a development plan from structured Figma data, mapping components to Prisma Design System. Use when you have a Figma JSON and need an implementation plan with code examples, file structure, and component mappings.",
-  {
-    figmaDataPath: z
-      .string()
-      .describe("Path to the JSON file generated by figma_data_analyzer, or the raw JSON string"),
-    context: z
-      .string()
-      .optional()
-      .describe("Additional context about the component's purpose or behavior (e.g., 'This is a confirmation modal for bookings')"),
-    designSystemPath: z
-      .string()
-      .optional()
-      .describe("Path to your design system node_modules (defaults to common Prisma Design System paths)"),
-  },
-  async ({ figmaDataPath, context, designSystemPath }) => {
-    const skill = loadSkill("figma/to-plan.md");
-    const timestamp = new Date().toISOString().replace(/:/g, "-");
-    const parts = [
-      `# Skill: Figma to Plan\n`,
-      skill,
-      `\n---\n`,
-      `## Execution parameters`,
-      `- **Figma data path:** ${figmaDataPath}`,
-      context ? `- **Context:** ${context}` : "",
-      designSystemPath ? `- **Design system path:** ${designSystemPath}` : "",
-      `\n---\n`,
-      `## Output`,
-      `The plan will be saved to: plans/plan-${timestamp}.md`,
-    ];
-    return skillResult(parts.filter(Boolean).join("\n"));
-  },
-);
-
-// ─── Main ────────────────────────────────────────────────────────────────────
+// ─── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
+  const server = new McpServer({
+    name: "mis-skills-repo",
+    version: "1.0.0",
+  });
+  
+  // Discover and register all skills
+  const skills = discoverSkills();
+  
+  if (skills.length === 0) {
+    console.error("⚠️  No skills found in", SKILLS_DIR);
+  } else {
+    console.error(`🔍 Found ${skills.length} skill(s)`);
+    for (const skill of skills) {
+      registerSkill(server, skill);
+    }
+  }
+  
+  // Start server
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  
+  const skillNames = skills.map(s => s.name).join(", ");
   console.error(
-    "MCP Server running on STDIO — skills registered: plan, write, write_a_skill, figma_pipeline, figma_api_fetch, figma_data_analyzer, figma_to_plan",
+    `MCP Server running on STDIO — skills registered: ${skillNames || "none"}`,
   );
 }
 

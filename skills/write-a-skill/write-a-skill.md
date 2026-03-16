@@ -1,12 +1,42 @@
+---
+name: write_a_skill
+description: "Meta-skill for creating new agent skills with the correct structure, metadata, and routing-optimised descriptions. Use when the user wants to create, write, or build a new skill for the orchestrator."
+category: Meta/Development
+triggers:
+  - create skill
+  - write skill
+  - new skill
+  - build skill
+  - skill development
+  - make skill
+tools:
+  - edit_file
+  - create_directory
+  - read_file
+  - list_directory
+  - askQuestions
+parameters:
+  - name: skillName
+    type: string
+    description: "Name of the new skill to create"
+    required: true
+  - name: purpose
+    type: string
+    description: "What should this skill do? Describe its domain and goals"
+    required: true
+  - name: triggers
+    type: string
+    description: "Keywords or phrases that should route to this skill (comma-separated)"
+    required: false
+  - name: examples
+    type: string
+    description: "1-3 concrete example use cases for this skill"
+    required: false
+---
+
 # Write-a-Skill
 
 Meta-skill for creating new agent skills with proper structure and best practices
-
-## Metadata
-
-- **Category:** Meta/Development
-- **Triggers:** create skill, write skill, new skill, build skill, skill development, make skill
-- **Tools:** edit_file, create_directory, read_file, list_directory, askQuestions
 
 ## When to Use This Skill
 

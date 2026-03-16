@@ -1,12 +1,17 @@
+---
+name: figma_data_analyzer
+description: "Processes raw Figma API JSON response and extracts structured design data including components, colors, typography, effects, and UI structure. Internal sub-skill used by figma orchestrator."
+category: Integration/Data Processing
+tools:
+  - edit
+  - read
+  - bash
+internal: true
+---
+
 # Figma Data Analyzer
 
 Procesa la respuesta de la API de Figma y extrae datos estructurados para generación de componentes
-
-## Metadata
-
-- **Category:** Integration/Data Processing
-- **Tools:** edit, read, bash
-- **Triggers:** analizar datos de Figma, procesar respuesta Figma, extraer componentes Figma, parsear Figma API
 
 ## When to Use This Skill
 

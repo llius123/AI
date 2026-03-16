@@ -1,12 +1,42 @@
+---
+name: write
+description: "Autonomously implements features, fixes bugs, and refactors code with senior engineer standards. Use when the user asks to implement, build, create, fix, debug, or refactor — especially for multi-file changes that require scanning the codebase."
+category: Execution/Implementation
+triggers:
+  - implement
+  - build
+  - create
+  - execute
+  - develop
+  - code
+  - fix
+  - debug
+  - refactor
+tools:
+  - edit_file
+  - terminal
+  - grep
+  - find_path
+  - diagnostics
+  - read_file
+parameters:
+  - name: task
+    type: string
+    description: "What to implement, fix, or refactor — be specific"
+    required: true
+  - name: plan
+    type: string
+    description: "Reference to an existing plan (from the plan skill) to execute, if any"
+    required: false
+  - name: context
+    type: string
+    description: "Relevant file paths, symbols, or constraints"
+    required: false
+---
+
 # Write
 
 Autonomous implementation with senior engineer standards
-
-## Metadata
-
-- **Category:** Execution/Implementation
-- **Triggers:** implement, build, create, execute, develop, code, fix, debug, refactor
-- **Tools:** edit_file, terminal, grep, find_path, diagnostics, read_file
 
 ## When to Use This Skill
 
@@ -108,4 +138,3 @@ When bugs are reported or detected:
 **No hand-holding required** - you have the tools and context to fix autonomously.
 
 </autonomous_bug_fixing>
-

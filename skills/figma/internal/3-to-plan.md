@@ -1,12 +1,17 @@
+---
+name: figma_to_plan
+description: "Generates a development plan from structured Figma data, mapping components to Prisma Design System. Internal sub-skill used by figma orchestrator."
+category: Integration/Planning
+tools:
+  - read
+  - write
+  - edit
+internal: true
+---
+
 # Figma to Plan
 
 Genera un plan de desarrollo en markdown a partir de los datos estructurados de Figma, mapeando componentes a Prisma Design System.
-
-## Metadata
-
-- **Category:** Integration/Planning
-- **Tools:** read, write, edit
-- **Triggers:** generar plan desde Figma, plan de desarrollo Figma, Figma a plan, mapear Figma a componentes
 
 ## When to Use This Skill
 

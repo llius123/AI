@@ -1,12 +1,38 @@
+---
+name: figma_pipeline
+description: "Runs the complete Figma workflow in one command: fetch from Figma API → analyse → save structured JSON. Use when the user provides a Figma URL and wants to process or extract the design data without caring about the individual steps."
+category: Integration/Orchestration
+triggers:
+  - Figma URL
+  - process Figma
+  - extract Figma
+  - Figma to React
+  - diseño Figma
+  - Figma components
+tools:
+  - skill
+  - read
+  - edit
+  - bash
+  - webfetch
+parameters:
+  - name: figmaUrl
+    type: url
+    description: "Full Figma design URL, e.g. https://www.figma.com/design/{fileId}/...?node-id={nodeId}"
+    required: true
+  - name: figmaToken
+    type: string
+    description: "Figma personal access token — paste it directly in the chat"
+    required: true
+  - name: forceRefresh
+    type: boolean
+    description: "Set to true to skip the cache and always fetch fresh data"
+    required: false
+---
+
 # Figma Orchestrator
 
 Router y workflow completo para procesar diseños de Figma: extrae datos de la API, analiza y genera plan de implementación.
-
-## Metadata
-
-- **Category:** Integration/Orchestration  
-- **Tools:** skill, read, edit, bash, webfetch
-- **Triggers:** Figma URL, process Figma, extract Figma, Figma to React, diseño Figma, Figma components
 
 ## System Prompt
 
