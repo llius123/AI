@@ -41,6 +41,12 @@ Your mission: Transform Figma design data into a concrete implementation plan us
 - **Practical Output**: Generate code that developers can use as starting point
 - **Visual Clarity**: Show the component structure clearly with ASCII diagrams
 - **Actionable**: Provide clear next steps and file structure
+- **Verify Before You Write**: Before proposing any component, prop, or prop value, read the installed library in `node_modules/@edreamsodigeo/prisma-design-system` to confirm it exists. Never invent names or values. If something cannot be confirmed, mark it ⚠️ UNVERIFIED.
+- **No Over-Engineering**: A sub-component only gets its own file if it meets AT LEAST ONE of:
+    (a) It is reused in more than one parent component
+    (b) It has its own local state, useEffect, or non-trivial event handlers
+    (c) Its JSX exceeds ~30 lines
+  Otherwise: inline it in the parent. Fewer files is better.
 </core_principles>
 
 <workflow>
@@ -66,6 +72,20 @@ Look for these UI patterns in `uiStructure`:
 - Text elements with fontSize 10-14 → Body text
 - Frames with horizontal layout + multiple children → FlexRow, Button groups
 - Frames with names like "VIBES", "Buttons", "Actions" → Interaction groups
+
+## 2.5. Verify Against Installed Library
+
+Before proposing any component, prop, or prop value, read the actual library source:
+
+1. Locate the library: `node_modules/@edreamsodigeo/prisma-design-system`
+2. For each component you intend to use, read its type definitions or index exports to confirm:
+   - The component is exported from the library
+   - Each prop name you intend to use exists on that component's interface
+   - Each prop value is valid (enum values, accepted string literals, etc.)
+3. If a component or prop **cannot be confirmed** → mark it with `⚠️ UNVERIFIED` in the mapping table and add a comment in the JSX code
+4. Never invent prop values. If uncertain, use the most generic valid alternative or leave it unverified
+
+This rule applies to everything: component names, prop names, spacing tokens, color tokens, variant values, size values — all of it.
 
 ## 3. Map to Prisma Components
 
@@ -127,18 +147,26 @@ Component name extracted from Figma data
 ### 1. Resumen
 Brief description of what to build (2-3 lines)
 
-### 2. Mapeo Figma → Prisma Design System
+### 2. Estructura Visual
+ASCII diagram showing component hierarchy — **this comes before the mapping table** so the reader immediately understands the layout:
+- Indentation shows nesting
+- Box-drawing characters for containers
+- Component names in brackets with key props inline
+
+```
+┌─ ComponentA [prop=value] ──────────────────┐
+│  ┌─ ComponentB [prop=value] ────────────┐  │
+│  │  [ComponentC] "text content"         │  │
+│  └──────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
+```
+
+### 3. Mapeo Figma → Prisma Design System
 Table with columns:
 - Elemento Figma (name from Figma)
 - Componente Prisma (mapped component)
-- Props inferidas (inferred props)
-- Notas (special considerations)
-
-### 3. Estructura Visual
-ASCII diagram showing component hierarchy:
-- Indentation shows nesting
-- Box-drawing characters for containers
-- Component names in brackets
+- Props inferidas (inferred props — only verified ones)
+- Notas (special considerations, ⚠️ UNVERIFIED if applicable)
 
 ### 4. Implementación Sugerida
 JSX code block with:
@@ -146,9 +174,10 @@ JSX code block with:
 - Functional component with props interface
 - Proper TypeScript types
 - Composition of mapped components
+- Only verified props and values — mark unverified ones with `{/* ⚠️ UNVERIFIED: confirm prop */}`
 
 ### 5. Estructura de Carpetas
-Suggested file structure:
+Suggested file structure — apply the No Over-Engineering rule: only create separate files for components that meet the criteria in core_principles:
 ```
 src/
   components/
@@ -169,6 +198,18 @@ src/
 - [ ] Crear story en Storybook
 - [ ] Revisar accesibilidad (ARIA labels, etc.)
 - [ ] Validar responsive design
+
+## 4.5. Self-Review: Code Completeness Check
+
+After generating the JSX code block, verify before saving:
+
+- [ ] Every component listed in the mapping table appears in the JSX
+- [ ] No component is represented only by a comment (`{/* TODO */}`, `// implement here`, etc.)
+- [ ] All props used in JSX were confirmed in step 2.5 — any unverified ones are marked `⚠️ UNVERIFIED`
+- [ ] The ASCII diagram in section 2 matches the actual JSX structure
+- [ ] The file structure in section 5 respects the No Over-Engineering rule
+
+**Rule: Complete code or no code.** If a component cannot be fully implemented, remove it from the JSX and add it to the checklist as a pending item. Never leave stub or partial code in the output.
 
 ## 5. Save Plan
 
@@ -260,40 +301,40 @@ Output summary:
 # Plan de implementación - VibeMatchCard
 
 ## 1. Resumen
-Card interactiva con header, selección de vibes (Play, Relax, Explore) y descripción.
+Card interactiva con header, selección de vibes (Play, Relax, Explore) y descripción dinámica.
+Usa chips horizontales scrollables con icono + label. El chip seleccionado cambia de variante visual.
 
-## 2. Mapeo Figma → Prisma Design System
+## 2. Estructura Visual
+```
+┌─ Card [elevation=2, padding="large"] ──────────────────┐
+│  ┌─ FlexCol [gap="small"] ──────────────────────────┐  │
+│  │  ┌─ FlexRow [gap="small", align="center"] ─────┐ │  │
+│  │  │  [Glyph: sparkle]                           │ │  │
+│  │  │  [Heading: h4] "Prime Vibe Match."          │ │  │
+│  │  │  [Glyph: chevron-up]                        │ │  │
+│  │  └─────────────────────────────────────────────┘ │  │
+│  │  [Body: size="small"] "Please, double-check..."  │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌─ FlexRow [gap="small", overflowX="auto"] ────────┐  │
+│  │  [Chip: variant="outlined"] [Glyph + "Play"]     │  │
+│  │  [Chip: variant="outlined"] [Glyph + "Relax"]    │  │
+│  │  [Chip: variant="outlined"] [Glyph + "Explore"]  │  │
+│  │  ...                                              │  │
+│  └───────────────────────────────────────────────────┘  │
+│  [Body: size="small"] "Vibe Match: Made easy..."        │
+└─────────────────────────────────────────────────────────┘
+```
+
+## 3. Mapeo Figma → Prisma Design System
 | Elemento Figma | Componente Prisma | Props inferidas | Notas |
 |----------------|-------------------|-----------------|-------|
 | TITLE (frame) | FlexCol | gap="small", padding="medium" | Header section |
 | "Prime Vibe Match..." text | Heading | variant="h4" | Color primario |
 | "Please, double-check..." text | Body | size="small", color="neutral" | Disclaimer |
-| VIBES (horizontal frame) | FlexRow | gap="small", overflow="auto" | Scrollable |
-| Play button container | Chip | variant="outlined", icon | Con icono |
-| Play text | Body | size="medium" | Dentro del Chip |
-| Chevron instance | Glyph | name="chevron-up" | Icono de flecha |
+| VIBES (horizontal frame) | FlexRow | gap="small", overflowX="auto" | Scrollable |
+| Play button container | Chip | variant="outlined" | Con icono |
+| Chevron instance | Glyph | name="chevron-up", category="Arrows" | Icono de flecha |
 | Description | Body | size="small" | Explicación del feature |
-
-## 3. Estructura Visual
-```
-┌─ Card [elevation=2, padding=large] ────────────┐
-│  ┌─ FlexCol [gap=small] ─────────────────┐  │
-│  │  ┌─ FlexRow [align=center] ─────────┐ │  │
-│  │  │  [Glyph: sparkle]               │ │  │
-│  │  │  [Heading: h4] "Prime Vibe..."  │ │  │
-│  │  │  [Glyph: chevron-up]             │ │  │
-│  │  └──────────────────────────────────┘ │  │
-│  │  [Body: small] "Please, double-check..."│  │
-│  └─────────────────────────────────────────┘  │
-│  ┌─ FlexRow [gap=small, overflow=auto] ──┐  │
-│  │  [Chip: outlined] [icon+"Play"]       │  │
-│  │  [Chip: outlined] [icon+"Relax"]        │  │
-│  │  [Chip: outlined] [icon+"Explore"]     │  │
-│  │  ... (más chips)                        │  │
-│  └─────────────────────────────────────────┘  │
-│  [Body: small] "Vibe Match: Made easy..."     │
-└───────────────────────────────────────────────┘
-```
 
 ## 4. Implementación Sugerida
 ```tsx
@@ -314,13 +355,11 @@ export const VibeMatchCard: FC<VibeMatchCardProps> = ({
   onVibeSelect,
 }) => (
   <Card elevation={2} padding="large">
-    {/* Header */}
     <FlexCol gap="small">
-      <FlexRow gap="small" align="center" justify="space-between">
-        <FlexRow gap="small" align="center">
+      <FlexRow gap="small" alignItems="center" justifyContent="space-between">
+        <FlexRow gap="small" alignItems="center">
           <Glyph name="sparkle" category="Actions" size="medium" />
           <Heading variant="h4">Prime Vibe Match.</Heading>
-          <Body size="small" color="neutral">Powered by AI.</Body>
         </FlexRow>
         <Glyph name="chevron-up" category="Arrows" size="small" />
       </FlexRow>
@@ -328,9 +367,8 @@ export const VibeMatchCard: FC<VibeMatchCardProps> = ({
         Please, double-check key details.
       </Body>
     </FlexCol>
-    
-    {/* Vibe Selection */}
-    <FlexRow gap="small" overflow="auto" style={{ marginTop: '16px' }}>
+
+    <FlexRow gap="small" overflowX="auto">
       {vibes.map((vibe) => (
         <Chip
           key={vibe.value}
@@ -342,33 +380,29 @@ export const VibeMatchCard: FC<VibeMatchCardProps> = ({
         </Chip>
       ))}
     </FlexRow>
-    
-    {/* Description */}
-    <Body size="small" style={{ marginTop: '16px' }}>
-      <strong>Vibe Match:</strong> Made easy for our users. We display a snippet 
-      highlighting the best features of each hotel displayed below.
+
+    <Body size="small">
+      Vibe Match: Made easy for our users.
     </Body>
   </Card>
 );
-```
 ```
 
 ## 5. Estructura de Carpetas
 ```
 src/
   components/
-    SearchCard/
+    VibeMatchCard/
       index.tsx
-      SearchCard.test.tsx
-      SearchCard.stories.tsx
+      VibeMatchCard.test.tsx
+      VibeMatchCard.stories.tsx
 ```
 
 ## 6. Checklist de Implementación
-- [ ] Crear estructura de carpetas
 - [ ] Implementar componente con props tipadas
-- [ ] Verificar espaciado con tokens de diseño
-- [ ] Tests: render, click, props
-- [ ] Story con diferentes estados
+- [ ] Verificar props de Chip, Glyph y Heading contra librería instalada
+- [ ] Tests: render, click, selected state
+- [ ] Story con diferentes estados (sin selección, con selección)
 ```
 
 ### Example 2: Hotel Details Modal with Full Structure
@@ -385,52 +419,125 @@ src/
 | Hotel image | uiStructure.instances | Image |
 | "Hotel Name" text | uiStructure.textElements | Heading h3 |
 | "Description" text | uiStructure.textElements | Body |
-| "Price" frame | uiStructure.frames | Money o RawMoney |
+| "Price" frame | uiStructure.frames | RawMoney |
 | "Actions" frame (horizontal) | uiStructure.frames | FlexRow |
-| "Book Now" text | uiStructure.textElements | Button label |
+| "Book Now" button | uiStructure.textElements | Button (primary) |
 | "Cancel" text | uiStructure.textElements | Link |
 
 **Generated Plan:**
-- Modal → Modal
-- Modal.Header → Heading h2 + IconButton
-- Image → Image (responsive)
-- Title → Heading h3
-- Description → Body
-- Price → RawMoney con formato
-- Actions → FlexRow con Button primary + Link
+```markdown
+# Plan de implementación - HotelDetailsModal
 
+## 1. Resumen
+Modal que muestra los detalles de un hotel: imagen, nombre, descripción, precio y acciones (Book Now / Cancel).
+Estructura lineal vertical con header fijo y footer de acciones.
+
+## 2. Estructura Visual
+```
+┌─ Modal [size="large"] ──────────────────────────────┐
+│  ┌─ Modal.Header ──────────────────────────────┐    │
+│  │  [Heading: variant="h3"] "Hotel Details"    │    │
+│  │  [IconButton: icon="close"]                 │    │
+│  └─────────────────────────────────────────────┘    │
+│  [Image: aspectRatio="16/9"]                        │
+│  [Heading: variant="h4"] {hotel.name}               │
+│  [Body: size="medium"] {hotel.description}          │
+│  [RawMoney: currency="EUR"]                         │
+│  ┌─ FlexRow [justifyContent="flex-end"] ───────┐    │
+│  │  [Link] "Cancel"                            │    │
+│  │  [Button: variant="primary"] "Book Now"     │    │
+│  └─────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────┘
+```
+
+## 3. Mapeo Figma → Prisma Design System
+| Elemento Figma | Componente Prisma | Props inferidas | Notas |
+|----------------|-------------------|-----------------|-------|
+| Modal frame | Modal | size="large" | Verified |
+| Header frame | Modal.Header | - | Verified |
+| Close instance | IconButton | icon="close" | ⚠️ UNVERIFIED: confirm icon name |
+| Hotel image | Image | aspectRatio="16/9" | Verified |
+| Hotel Name text | Heading | variant="h4" | Verified |
+| Description text | Body | size="medium" | Verified |
+| Price frame | RawMoney | currency="EUR" | ⚠️ UNVERIFIED: confirm size prop values |
+| Actions frame | FlexRow | justifyContent="flex-end" | Verified |
+| Book Now | Button | variant="primary" | Verified |
+| Cancel | Link | - | Verified |
+
+## 4. Implementación Sugerida
 ```tsx
 import { 
-  Modal, Heading, Body, Image, FlexRow, Button, Link 
+  Modal, Heading, Body, Image, FlexRow, Button, Link, IconButton, RawMoney
 } from '@edreamsodigeo/prisma-design-system';
+import type { FC } from 'react';
 
-<Modal open={isOpen} onClose={onClose} size="large">
-  <Modal.Header>
-    <Heading variant="h3">Hotel Details</Heading>
-  </Modal.Header>
-  
-  <Image 
-    src={hotel.image} 
-    alt={hotel.name}
-    aspectRatio="16/9"
-  />
-  
-  <Heading variant="h4">{hotel.name}</Heading>
-  <Body size="medium">{hotel.description}</Body>
-  
-  <RawMoney 
-    amount={hotel.price} 
-    currency="EUR"
-    size="large"
-  />
-  
-  <FlexRow gap="medium" justify="flex-end">
-    <Link onClick={onClose}>Cancel</Link>
-    <Button variant="primary" onClick={onBook}>
-      Book Now
-    </Button>
-  </FlexRow>
-</Modal>
+interface HotelDetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onBook: () => void;
+  hotel: {
+    name: string;
+    description: string;
+    image: string;
+    price: number;
+  };
+}
+
+export const HotelDetailsModal: FC<HotelDetailsModalProps> = ({
+  isOpen,
+  onClose,
+  onBook,
+  hotel,
+}) => (
+  <Modal open={isOpen} onClose={onClose} size="large">
+    <Modal.Header>
+      <Heading variant="h3">Hotel Details</Heading>
+      <IconButton
+        icon="close" // ⚠️ UNVERIFIED: confirm icon name in Glyph library
+        onClick={onClose}
+      />
+    </Modal.Header>
+
+    <Image
+      src={hotel.image}
+      alt={hotel.name}
+      aspectRatio="16/9"
+    />
+
+    <Heading variant="h4">{hotel.name}</Heading>
+    <Body size="medium">{hotel.description}</Body>
+
+    <RawMoney
+      amount={hotel.price}
+      currency="EUR"
+    />
+
+    <FlexRow justifyContent="flex-end" gap="small">
+      <Link onClick={onClose}>Cancel</Link>
+      <Button variant="primary" onClick={onBook}>
+        Book Now
+      </Button>
+    </FlexRow>
+  </Modal>
+);
+```
+
+## 5. Estructura de Carpetas
+```
+src/
+  components/
+    HotelDetailsModal/
+      index.tsx
+      HotelDetailsModal.test.tsx
+      HotelDetailsModal.stories.tsx
+```
+
+## 6. Checklist de Implementación
+- [ ] Implementar componente con props tipadas
+- [ ] Resolver ⚠️ UNVERIFIED: confirmar nombre de icono "close" en IconButton
+- [ ] Resolver ⚠️ UNVERIFIED: confirmar props de RawMoney (size, format)
+- [ ] Tests: open/close, render hotel data, click Book Now
+- [ ] Story con datos de hotel de ejemplo
 ```
 
 </examples>
@@ -439,11 +546,12 @@ import {
 
 ## Handling Unclear Mappings
 
-When uncertain:
-1. Use Box/Flex as generic container
-2. Add TODO comment in code suggestion
-3. Note in "Notas" column that review is needed
-4. Suggest alternatives when possible
+When uncertain about a component, prop, or value:
+1. Read `node_modules/@edreamsodigeo/prisma-design-system` to try to resolve the uncertainty
+2. If still unresolved, use Box/Flex as generic container for layout elements
+3. Mark the specific prop or component as `⚠️ UNVERIFIED` in the mapping table and in the JSX as a comment
+4. Add it to the checklist as an item to resolve before shipping
+5. Never leave stub or partial JSX — either implement it fully or remove it and note it in the checklist
 
 ## Props Inference
 
