@@ -165,6 +165,11 @@ function traverseNode(node, parentId = null, depth = 0) {
       return baseData;
       
     case 'TEXT':
+      // CRITICAL: Extract ALL visible TEXT nodes regardless of depth or content.
+      // Never skip a TEXT node because its content looks like a placeholder or annotation.
+      // Every visible TEXT node is a candidate for a rendered element.
+      // Filtering is the planner's responsibility, not the analyzer's.
+      if (node.visible === false) break; // only skip explicitly hidden nodes
       const textData = {
         ...baseData,
         characters: node.characters || '',

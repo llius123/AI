@@ -47,6 +47,7 @@ Your mission: Transform Figma design data into a concrete implementation plan us
     (b) It has its own local state, useEffect, or non-trivial event handlers
     (c) Its JSX exceeds ~30 lines
   Otherwise: inline it in the parent. Fewer files is better.
+- **Lorem Ipsum Always**: All text found in Figma must be replaced with lorem ipsum in generated component code and stories. Figma copy is never final at plan time. This applies without exception — even to text that looks like real copy (labels, titles, descriptions). If text is received as a prop from outside (API, parent), define it as a typed prop and use lorem ipsum as the value in stories and tests.
 </core_principles>
 
 <workflow>
@@ -72,6 +73,8 @@ Look for these UI patterns in `uiStructure`:
 - Text elements with fontSize 10-14 → Body text
 - Frames with horizontal layout + multiple children → FlexRow, Button groups
 - Frames with names like "VIBES", "Buttons", "Actions" → Interaction groups
+
+**TEXT node rule (non-negotiable):** Every entry in `uiStructure.textElements` with `visible: true` must appear in the plan as a rendered element. If the text content looks like a designer annotation (e.g. contains "Description of", "Add content here", "Annotation", "Placeholder"), flag it with `⚠️ ANNOTATION?` and require human confirmation before excluding it. Never silently drop a visible TEXT node.
 
 ## 2.5. Verify Against Installed Library
 
@@ -176,6 +179,9 @@ JSX code block with:
 - Composition of mapped components
 - Only verified props and values — mark unverified ones with `{/* ⚠️ UNVERIFIED: confirm prop */}`
 
+**Interactive selection state rule:** If the design shows active/inactive variants on the same element (e.g. selected pill vs unselected pill), the plan must note:
+> "This component has interactive selection state. Initialise `useState` from the persistent storage value on mount. Update both local state and storage on every interaction. Never call `storage.get()` directly during render without wrapping the value in state — doing so breaks reactivity because React will not re-render on plain object mutations."
+
 ### 5. Estructura de Carpetas
 Suggested file structure — apply the No Over-Engineering rule: only create separate files for components that meet the criteria in core_principles:
 ```
@@ -255,6 +261,11 @@ Output summary:
   - "Search", "Filter", "Sort" → Actions
   - Default → General
 
+**Icon size rule:** When mapping an icon instance:
+1. First check if an equivalent icon exists in the Prisma `Glyph` library. If yes, use `<Glyph size="..." />` — the `size` prop handles dimensions correctly, no wrapper needed.
+2. If a custom SVG component must be used (no Glyph equivalent exists), read its source file. If it renders a hardcoded SVG with no size props, add an explicit note in the plan: "Must wrap in a `{W}×{H}px` container with `'& svg': { width: '{W}px', height: '{H}px' }` to match Figma."
+Never assume a custom SVG component respects its parent's dimensions.
+
 ### Layout Containers
 - Multiple children + horizontal arrangement → FlexRow
 - Multiple children + vertical arrangement → Col or Flex (column)
@@ -309,19 +320,19 @@ Usa chips horizontales scrollables con icono + label. El chip seleccionado cambi
 ┌─ Card [elevation=2, padding="large"] ──────────────────┐
 │  ┌─ FlexCol [gap="small"] ──────────────────────────┐  │
 │  │  ┌─ FlexRow [gap="small", align="center"] ─────┐ │  │
-│  │  │  [Glyph: sparkle]                           │ │  │
-│  │  │  [Heading: h4] "Prime Vibe Match."          │ │  │
-│  │  │  [Glyph: chevron-up]                        │ │  │
-│  │  └─────────────────────────────────────────────┘ │  │
-│  │  [Body: size="small"] "Please, double-check..."  │  │
-│  └───────────────────────────────────────────────────┘  │
-│  ┌─ FlexRow [gap="small", overflowX="auto"] ────────┐  │
-│  │  [Chip: variant="outlined"] [Glyph + "Play"]     │  │
-│  │  [Chip: variant="outlined"] [Glyph + "Relax"]    │  │
-│  │  [Chip: variant="outlined"] [Glyph + "Explore"]  │  │
-│  │  ...                                              │  │
-│  └───────────────────────────────────────────────────┘  │
-│  [Body: size="small"] "Vibe Match: Made easy..."        │
+│  │  │  [Glyph: sparkle]                                │ │  │
+│  │  │  [Heading: h4] "Lorem ipsum dolor sit amet."    │ │  │
+│  │  │  [Glyph: chevron-up]                            │ │  │
+│  │  └──────────────────────────────────────────────────┘ │  │
+│  │  [Body: size="small"] "Lorem ipsum, double-check..."  │  │
+│  └────────────────────────────────────────────────────────┘  │
+│  ┌─ FlexRow [gap="small", overflowX="auto"] ─────────────┐  │
+│  │  [Chip: variant="outlined"] [Glyph + "Lorem"]         │  │
+│  │  [Chip: variant="outlined"] [Glyph + "Ipsum"]         │  │
+│  │  [Chip: variant="outlined"] [Glyph + "Dolor"]         │  │
+│  │  ...                                                   │  │
+│  └────────────────────────────────────────────────────────┘  │
+│  [Body: size="small"] "Lorem ipsum dolor sit amet..."        │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -359,12 +370,12 @@ export const VibeMatchCard: FC<VibeMatchCardProps> = ({
       <FlexRow gap="small" alignItems="center" justifyContent="space-between">
         <FlexRow gap="small" alignItems="center">
           <Glyph name="sparkle" category="Actions" size="medium" />
-          <Heading variant="h4">Prime Vibe Match.</Heading>
+          <Heading variant="h4">Lorem ipsum dolor sit amet.</Heading>
         </FlexRow>
         <Glyph name="chevron-up" category="Arrows" size="small" />
       </FlexRow>
       <Body size="small" color="neutral">
-        Please, double-check key details.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       </Body>
     </FlexCol>
 
@@ -382,7 +393,7 @@ export const VibeMatchCard: FC<VibeMatchCardProps> = ({
     </FlexRow>
 
     <Body size="small">
-      Vibe Match: Made easy for our users.
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
     </Body>
   </Card>
 );
@@ -436,17 +447,17 @@ Estructura lineal vertical con header fijo y footer de acciones.
 ```
 ┌─ Modal [size="large"] ──────────────────────────────┐
 │  ┌─ Modal.Header ──────────────────────────────┐    │
-│  │  [Heading: variant="h3"] "Hotel Details"    │    │
-│  │  [IconButton: icon="close"]                 │    │
-│  └─────────────────────────────────────────────┘    │
-│  [Image: aspectRatio="16/9"]                        │
-│  [Heading: variant="h4"] {hotel.name}               │
-│  [Body: size="medium"] {hotel.description}          │
-│  [RawMoney: currency="EUR"]                         │
-│  ┌─ FlexRow [justifyContent="flex-end"] ───────┐    │
-│  │  [Link] "Cancel"                            │    │
-│  │  [Button: variant="primary"] "Book Now"     │    │
-│  └─────────────────────────────────────────────┘    │
+│  │  [Heading: variant="h3"] "Lorem ipsum dolor"  │    │
+│  │  [IconButton: icon="close"]                    │    │
+│  └──────────────────────────────────────────────┘    │
+│  [Image: aspectRatio="16/9"]                         │
+│  [Heading: variant="h4"] {hotel.name}                │
+│  [Body: size="medium"] {hotel.description}           │
+│  [RawMoney: currency="EUR"]                          │
+│  ┌─ FlexRow [justifyContent="flex-end"] ────────┐    │
+│  │  [Link] "Lorem"                              │    │
+│  │  [Button: variant="primary"] "Lorem ipsum"   │    │
+│  └──────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -491,7 +502,7 @@ export const HotelDetailsModal: FC<HotelDetailsModalProps> = ({
 }) => (
   <Modal open={isOpen} onClose={onClose} size="large">
     <Modal.Header>
-      <Heading variant="h3">Hotel Details</Heading>
+      <Heading variant="h3">Lorem ipsum dolor sit amet.</Heading>
       <IconButton
         icon="close" // ⚠️ UNVERIFIED: confirm icon name in Glyph library
         onClick={onClose}
@@ -513,9 +524,9 @@ export const HotelDetailsModal: FC<HotelDetailsModalProps> = ({
     />
 
     <FlexRow justifyContent="flex-end" gap="small">
-      <Link onClick={onClose}>Cancel</Link>
+      <Link onClick={onClose}>Lorem</Link>
       <Button variant="primary" onClick={onBook}>
-        Book Now
+        Lorem ipsum
       </Button>
     </FlexRow>
   </Modal>
@@ -559,13 +570,26 @@ From Figma data, extract:
 - **From `components`:** Colors → map to theme tokens if recognizable
 - **From `uiStructure.frames`:** 
   - `layoutMode` → FlexRow (HORIZONTAL) or FlexCol (VERTICAL)
-  - `itemSpacing` → gap prop (small/medium/large)
-  - `padding` → padding prop
+  - `itemSpacing` → gap prop (must be resolved to a token — see spacing table below)
+  - `padding` → padding prop (must be resolved to a token — see spacing table below)
 - **From `uiStructure.textElements`:**
   - `fontSize` → map to typography variants (Heading/Body sizes)
   - `fontWeight` → weight prop
-- **Spacing → use design system spacing tokens**
 - **States (hover, disabled)** → note for implementation
+
+**Spacing token rule (mandatory):** Before writing any `gap`, `padding`, or `margin` value, look up the exact px value from Figma and map it using this table. Verify the token names against `node_modules/@edreamsodigeo/prisma-design-system` before using them.
+
+| px | token      |
+|----|------------|
+| 2  | `tiny`     |
+| 4  | `2x_small` |
+| 8  | `1x_small` |
+| 12 | `small`    |
+| 16 | `base`     |
+| 24 | `big`      |
+| 32 | `1x_big`   |
+
+If the Figma value does not match any token exactly, use `sx={{ gap: "{N}px" }}` with the exact px value. Never round to the nearest token by intuition.
 
 ## Import Format
 
