@@ -8,6 +8,40 @@ tools:
 internal: true
 ---
 
+## Task Tool Interface
+
+This skill is designed to be called via the Task tool. It accepts input parameters and returns a structured JSON response.
+
+### Input Parameters (via Task prompt)
+```yaml
+fileId: string      # ID del archivo Figma (ej: "3sZE6Ke3MSPwcdrhSLQkgG")
+nodeId: string      # ID del nodo (ej: "2158:22764")
+figmaToken: string  # Token de autenticación de Figma
+```
+
+### Output Format (JSON)
+```json
+{
+  "success": true|false,
+  "backupPath": "plans/figma-raw-{timestamp}-{fileId}-{nodeId}.json",
+  "metadata": {
+    "fileId": "...",
+    "nodeId": "...",
+    "fetchedAt": "ISO-8601-timestamp",
+    "apiUrl": "https://api.figma.com/v1/files/..."
+  },
+  "error": "mensaje de error (solo si success=false)"
+}
+```
+
+### Behavior
+1. Validate input parameters
+2. Make HTTP request to Figma API
+3. Save raw response to `plans/figma-raw-{timestamp}-{fileId}-{nodeId}.json`
+4. Return only the JSON output above (DO NOT return the full data object)
+
+---
+
 # Figma API Fetch
 
 Cómo hacer fetch a la API de Figma
@@ -82,3 +116,33 @@ return {
 - **Auth Header**: `X-Figma-Token: {token}`
 - **Node ID Format**: Convert hyphens to colons (e.g., `2158-22764` → `2158:22764`)
 - **Token**: Use `FIGMA_TOKEN` from environment variables
+
+## Task Tool Output (CRITICAL)
+
+When called via Task tool, you MUST return ONLY this JSON structure:
+
+```json
+{
+  "success": true,
+  "backupPath": "plans/figma-raw-2026-03-17T10-30-00-abc123-2158-22764.json",
+  "metadata": {
+    "fileId": "abc123",
+    "nodeId": "2158:22764",
+    "fetchedAt": "2026-03-17T10:30:00.000Z",
+    "apiUrl": "https://api.figma.com/v1/files/abc123/nodes?ids=2158:22764"
+  }
+}
+```
+
+**DO NOT:**
+- Return the full `data` object from the API (it can be 1-10 MB)
+- Include any text before or after the JSON
+- Return partial data or incomplete paths
+
+**If error occurs:**
+```json
+{
+  "success": false,
+  "error": "Detailed error message describing what went wrong"
+}
+```

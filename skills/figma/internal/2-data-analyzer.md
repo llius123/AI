@@ -9,6 +9,45 @@ tools:
 internal: true
 ---
 
+## Task Tool Interface
+
+This skill is designed to be called via the Task tool. It reads raw Figma data from a file path and returns structured analysis results.
+
+### Input Parameters (via Task prompt)
+```yaml
+backupPath: string  # Path absoluto al archivo raw JSON (output de 1-api-fetch)
+                     # Ej: "plans/figma-raw-2026-03-17T10-30-00-abc123-2158-22764.json"
+```
+
+### Output Format (JSON)
+```json
+{
+  "success": true|false,
+  "analysisPath": "plans/figma-2026-03-17T10-30-00-abc123-2158-22764.json",
+  "summary": {
+    "totalComponents": 12,
+    "totalStyles": 8,
+    "totalFrames": 15,
+    "totalTextElements": 24,
+    "categories": ["Arrows", "Places", "Sports"]
+  },
+  "metadata": {
+    "fileId": "abc123",
+    "nodeId": "2158:22764",
+    "analyzedAt": "2026-03-17T10:30:00.000Z"
+  },
+  "error": "mensaje de error (solo si success=false)"
+}
+```
+
+### Behavior
+1. Read raw JSON from backupPath
+2. Analyze and extract structured data (components, styles, UI structure)
+3. Save structured result to `plans/figma-{timestamp}-{fileId}-{nodeId}.json`
+4. Return only the JSON output above (DO NOT include the full analysis data)
+
+---
+
 # Figma Data Analyzer
 
 Procesa la respuesta de la API de Figma y extrae datos estructurados para generación de componentes
@@ -511,4 +550,42 @@ This skill is typically called by:
 - Manual invocation: When user has raw API data to analyze
 
 Next skill in pipeline:
-- **to-react**: Will read the generated JSON to create React components
+- **to-plan**: Will read the generated JSON to create implementation plan
+
+---
+
+## Task Tool Output (CRITICAL)
+
+When called via Task tool, you MUST return ONLY this JSON structure:
+
+```json
+{
+  "success": true,
+  "analysisPath": "plans/figma-2026-03-17T10-30-00-abc123-2158-22764.json",
+  "summary": {
+    "totalComponents": 12,
+    "totalStyles": 8,
+    "totalFrames": 15,
+    "totalTextElements": 24,
+    "categories": ["Arrows", "Places", "Sports", "Amenities"]
+  },
+  "metadata": {
+    "fileId": "abc123",
+    "nodeId": "2158:22764",
+    "analyzedAt": "2026-03-17T10:30:00.000Z"
+  }
+}
+```
+
+**DO NOT:**
+- Return the full analysis JSON (can be 100KB+)
+- Include any text before or after the JSON
+- Return partial paths or incomplete summaries
+
+**If error occurs:**
+```json
+{
+  "success": false,
+  "error": "Detailed error message: file not found, invalid JSON, missing required fields, etc."
+}
+```

@@ -9,6 +9,47 @@ tools:
 internal: true
 ---
 
+## Task Tool Interface
+
+This skill is designed to be called via the Task tool. It reads structured Figma data and generates an implementation plan.
+
+### Input Parameters (via Task prompt)
+```yaml
+analysisPath: string  # Path absoluto al JSON analizado (output de 2-data-analyzer)
+                     # Ej: "plans/figma-2026-03-17T10-30-00-abc123-2158-22764.json"
+```
+
+### Output Format (JSON)
+```json
+{
+  "success": true|false,
+  "planPath": "plans/plan-2026-03-17T10-30-00-abc123-2158-22764.md",
+  "stats": {
+    "componentsMapped": 12,
+    "prismaComponents": ["Button", "Card", "Heading", "Glyph"],
+    "fileStructure": {
+      "totalFiles": 3,
+      "mainComponent": "ComponentName"
+    }
+  },
+  "metadata": {
+    "fileId": "abc123",
+    "nodeId": "2158:22764",
+    "generatedAt": "2026-03-17T10:30:00.000Z"
+  },
+  "error": "mensaje de error (solo si success=false)"
+}
+```
+
+### Behavior
+1. Read analyzed JSON from analysisPath
+2. Map components to Prisma Design System
+3. Generate markdown plan with ASCII diagrams and JSX code
+4. Save plan to `plans/plan-{timestamp}-{fileId}-{nodeId}.md`
+5. Return only the JSON output above (DO NOT return the full markdown content)
+
+---
+
 # Figma to Plan
 
 Genera un plan de desarrollo en markdown a partir de los datos estructurados de Figma, mapeando componentes a Prisma Design System.
@@ -359,8 +400,47 @@ If no components detected in `components` array:
 - Can use @skills/write to generate the actual component code
 
 **File Outputs:**
-- Location: `plans/plan-{timestamp}.md`
+- Location: `plans/plan-{timestamp}-{fileId}-{nodeId}.md`
 - Format: Markdown with code blocks
 - Includes: Mappings, ASCII diagram, JSX example, file structure, checklist
+
+---
+
+## Task Tool Output (CRITICAL)
+
+When called via Task tool, you MUST return ONLY this JSON structure:
+
+```json
+{
+  "success": true,
+  "planPath": "plans/plan-2026-03-17T10-30-00-abc123-2158-22764.md",
+  "stats": {
+    "componentsMapped": 12,
+    "prismaComponents": ["Button", "Card", "Heading", "Glyph", "FlexRow"],
+    "fileStructure": {
+      "totalFiles": 3,
+      "mainComponent": "ComponentName"
+    }
+  },
+  "metadata": {
+    "fileId": "abc123",
+    "nodeId": "2158:22764",
+    "generatedAt": "2026-03-17T10:30:00.000Z"
+  }
+}
+```
+
+**DO NOT:**
+- Return the full markdown content (can be 50KB+)
+- Include any text before or after the JSON
+- Return incomplete stats or missing paths
+
+**If error occurs:**
+```json
+{
+  "success": false,
+  "error": "Detailed error message: file not found, invalid JSON, no components detected, etc."
+}
+```
 
 </skill>
