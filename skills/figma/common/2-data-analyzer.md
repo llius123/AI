@@ -16,7 +16,7 @@ This skill is designed to be called via the Task tool. It reads raw Figma data f
 ### Input Parameters (via Task prompt)
 ```yaml
 backupPath: string  # Path absoluto al archivo raw JSON (output de 1-api-fetch)
-                     # Ej: "plans/figma-raw-2026-03-17T10-30-00-abc123-2158-22764.json"
+                      # Ej: "plans/figma-raw-2026-03-17T10-30-00-abc123-2158-22764.json"
 ```
 
 ### Output Format (JSON)

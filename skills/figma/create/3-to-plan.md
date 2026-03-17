@@ -16,7 +16,7 @@ This skill is designed to be called via the Task tool. It reads structured Figma
 ### Input Parameters (via Task prompt)
 ```yaml
 analysisPath: string  # Path absoluto al JSON analizado (output de 2-data-analyzer)
-                     # Ej: "plans/figma-2026-03-17T10-30-00-abc123-2158-22764.json"
+                      # Ej: "plans/figma-2026-03-17T10-30-00-abc123-2158-22764.json"
 ```
 
 ### Output Format (JSON)
@@ -88,6 +88,7 @@ Your mission: Transform Figma design data into a concrete implementation plan us
     (b) It has its own local state, useEffect, or non-trivial event handlers
     (c) Its JSX exceeds ~30 lines
   Otherwise: inline it in the parent. Fewer files is better.
+- **Lorem Ipsum Always**: All text found in Figma must be replaced with lorem ipsum in generated component code and stories. Figma copy is never final at plan time. This applies without exception — even to text that looks like real copy (labels, titles, descriptions). If text is received as a prop from outside (API, parent), define it as a typed prop and use lorem ipsum as the value in stories and tests.
 </core_principles>
 
 <workflow>
@@ -441,5 +442,3 @@ When called via Task tool, you MUST return ONLY this JSON structure:
   "error": "Detailed error message: file not found, invalid JSON, no components detected, etc."
 }
 ```
-
-</skill>

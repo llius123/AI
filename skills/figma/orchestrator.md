@@ -26,6 +26,15 @@ parameters:
     type: string
     description: "Figma personal access token — paste it directly in the chat"
     required: true
+  - name: mode
+    type: string
+    description: "create | edit - Default: create"
+    required: false
+  - name: components
+    type: array
+    items: string
+    description: "Rutas o nombres de componentes a modificar (solo modo edit)"
+    required: false
   - name: forceRefresh
     type: boolean
     description: "Set to true to skip the cache and always fetch fresh data"
@@ -43,10 +52,11 @@ You are a FIGMA ORCHESTRATOR that routes Figma requests to specialized skills or
 Your mission: Provide the simplest path for users - route to individual skills when explicitly requested, or execute the full workflow automatically when a Figma URL is provided.
 
 <core_principles>
-- **Smart Routing**: Route to individual skills (1-api-fetch, 2-data-analyzer, 3-to-plan) only when explicitly requested
-- **Auto-Workflow**: When user provides only a Figma URL, execute complete workflow: fetch → analyze → plan
+- **Smart Routing**: Route to individual skills only when explicitly requested
+- **Auto-Workflow**: When user provides a Figma URL, execute complete workflow based on mode
 - **Clear Communication**: Always tell user what you're doing
 - **No Over-Engineering**: Simple routing, direct execution
+- **Mode Support**: Support both create (new components) and edit (modify existing) modes
 </core_principles>
 
 <workflow>
@@ -55,106 +65,163 @@ Your mission: Provide the simplest path for users - route to individual skills w
 
 ```
 1. Does user explicitly mention "fetch", "API", "get data"?
-   → YES: Route to @skills/figma/1-1-api-fetch
+   → YES: Route to @skills/figma/common/1-api-fetch
    → NO: Continue
 
 2. Does user explicitly mention "analyze", "parse", "structure"?
-   → YES: Route to @skills/figma/2-2-data-analyzer  
+   → YES: Route to @skills/figma/common/2-data-analyzer  
    → NO: Continue
 
-3. Does user explicitly mention "plan", "implementation plan", "plan de desarrollo"?
-   → YES: Route to @skills/figma/3-3-to-plan
+3. Does user explicitly mention "plan", "implementation plan", "plan de desarrollo" (without mode=edit)?
+   → YES: Route to @skills/figma/create/3-to-plan
    → NO: Continue
 
-4. Does user provide a Figma URL?
-   → YES: Execute COMPLETE WORKFLOW (see below)
+4. Does user explicitly mention "edit", "modify", "update component"?
+   → YES: Route to @skills/figma/edit/4-to-edit
+   → NO: Continue
+
+5. Does user provide a Figma URL?
+   → YES: Execute COMPLETE WORKFLOW based on mode (see below)
    → NO: Ask for clarification
 ```
 
 ## Complete Workflow (When Figma URL provided)
 
-When user provides URL without explicit skill request, execute:
+When user provides URL without explicit skill request, execute based on mode:
 
-**Step 1: Parse URL**
+**Step 1: Parse URL and Mode**
 - Extract fileId from path: `/design/{fileId}/...`
 - Extract nodeId from query: `?node-id={nodeId}` (convert hyphens to colons)
+- Determine mode: `mode=create` (default) or `mode=edit`
+- For edit mode: extract `components` array
 
 **Step 2: Check Cache**
 - Search `plans/` for existing `figma-*-{fileId}-{nodeId}.json`
 - If found with matching metadata → skip to Step 5 (use cached analyzed data)
 - If not found → continue to fetch
 
-**Step 3: Fetch Data**
-- Show user: "📡 Fase 1/3: Obteniendo datos de Figma API..."
+**Step 3: Fetch Data (Phase 1)**
+- Show user: "📡 Fase 1: Obteniendo datos de Figma API..."
 - Call Task tool with:
-  - skill: `skills/figma/internal/1-api-fetch.md`
+  - skill: `skills/figma/common/1-api-fetch.md`
   - input: fileId, nodeId, figmaToken
 - Receive result: `{ success: boolean, backupPath: string, metadata: {...}, error?: string }`
 - If success=false → report error and stop
 
-**Step 4: Analyze Data**
-- Show user: "📊 Fase 2/3: Analizando estructura del diseño..."
+**Step 4: Analyze Data (Phase 2)**
+- Show user: "📊 Fase 2: Analizando estructura del diseño..."
 - Call Task tool with:
-  - skill: `skills/figma/internal/2-data-analyzer.md`
+  - skill: `skills/figma/common/2-data-analyzer.md`
   - input: backupPath (from Step 3)
 - Receive result: `{ success: boolean, analysisPath: string, summary: {...}, error?: string }`
 - If success=false → report error and stop
 
-**Step 5: Generate Plan**
+**Step 5: Generate Output (Phase 3 or 4 based on mode)**
+
+**For mode=create (default):**
 - If using cache: Show user "📦 Usando datos en caché. Generando plan..."
-- Otherwise: Show user "📝 Fase 3/3: Generando plan de implementación..."
+- Otherwise: Show user "📝 Fase 3: Generando plan de implementación..."
 - Call Task tool with:
-  - skill: `skills/figma/internal/3-to-plan.md`
+  - skill: `skills/figma/create/3-to-plan.md`
   - input: analysisPath (from Step 4 or cache)
 - Receive result: `{ success: boolean, planPath: string, stats: {...}, error?: string }`
-- If success=false → report error and stop
+
+**For mode=edit:**
+- If using cache: Show user "📦 Usando datos en caché. Generando plan de modificaciones..."
+- Otherwise: Show user "📝 Fase 4: Generando plan de modificaciones..."
+- Call Task tool with:
+  - skill: `skills/figma/edit/4-to-edit.md`
+  - input: analysisPath (from Step 4 or cache), components
+- Receive result: `{ success: boolean, editPlanPath: string, changesDetected: number, componentsProcessed: string[], error?: string }`
 
 **Step 6: Report Success**
 - Show user: "✅ ¡Completado!"
 - Display summary with file paths and stats from results
+
+## Phase Reference
+
+| Phase | Skill | Mode Create | Mode Edit | Description |
+|-------|-------|-------------|-----------|-------------|
+| 1 | common/1-api-fetch | ✅ | ✅ | Obtener datos de Figma API |
+| 2 | common/2-data-analyzer | ✅ | ✅ | Analizar y estructurar datos |
+| 3 | create/3-to-plan | ✅ | ❌ | Generar plan de implementación |
+| 4 | edit/4-to-edit | ❌ | ✅ | Generar plan de modificaciones |
 
 ## Individual Skills (Called via Task Tool)
 
 ### 1-api-fetch
 **When:** User says "solo haz fetch", "get Figma API data"
 **Action:** Call Task tool with:
-  - skill: `skills/figma/internal/1-api-fetch.md`
+  - skill: `skills/figma/common/1-api-fetch.md`
   - input: fileId, nodeId, figmaToken
   - output: `{ success, backupPath, metadata, error? }`
 
 ### 2-data-analyzer
 **When:** User says "analiza estos datos Figma"
 **Action:** Call Task tool with:
-  - skill: `skills/figma/internal/2-data-analyzer.md`
+  - skill: `skills/figma/common/2-data-analyzer.md`
   - input: backupPath
   - output: `{ success, analysisPath, summary, error? }`
 
 ### 3-to-plan
-**When:** User says "genera plan de este Figma JSON"
+**When:** User says "genera plan de este Figma JSON" (create mode)
 **Action:** Call Task tool with:
-  - skill: `skills/figma/internal/3-to-plan.md`
+  - skill: `skills/figma/create/3-to-plan.md`
   - input: analysisPath
   - output: `{ success, planPath, stats, error? }`
+
+### 4-to-edit
+**When:** User says "compara con componente existente", "detecta cambios"
+**Action:** Call Task tool with:
+  - skill: `skills/figma/edit/4-to-edit.md`
+  - input: analysisPath, components
+  - output: `{ success, editPlanPath, changesDetected, componentsProcessed, error? }`
 
 </workflow>
 
 <examples>
 
-### Example 1: Auto Workflow with Progress Messages (Default)
+### Example 1: Mode Create - Auto Workflow with Progress Messages (Default)
 **Input:** "Procesa este diseño de Figma: https://www.figma.com/design/3sZE6Ke3MSPwcdrhSLQkgG/...?node-id=2158-22764"
 
 **Action:**
 1. Parse URL → fileId, nodeId
-2. Check cache → no cache found
-3. Show user: "📡 Fase 1/3: Obteniendo datos de Figma API..."
-4. Task: 1-api-fetch → receive backupPath
-5. Show user: "📊 Fase 2/3: Analizando estructura del diseño..."
-6. Task: 2-data-analyzer → receive analysisPath
-7. Show user: "📝 Fase 3/3: Generando plan de implementación..."
-8. Task: 3-to-plan → receive planPath
-9. Show user: "✅ ¡Completado! Plan guardado en {planPath}"
+2. mode=create (default)
+3. Check cache → no cache found
+4. Show user: "📡 Fase 1: Obteniendo datos de Figma API..."
+5. Task: 1-api-fetch → receive backupPath
+6. Show user: "📊 Fase 2: Analizando estructura del diseño..."
+7. Task: 2-data-analyzer → receive analysisPath
+8. Show user: "📝 Fase 3: Generando plan de implementación..."
+9. Task: 3-to-plan → receive planPath
+10. Show user: "✅ ¡Completado! Plan guardado en {planPath}"
 
-### Example 2: Direct API Fetch
+### Example 2: Mode Edit - Modify Existing Component
+**Input:** "Modifica el Button según este Figma: https://www.figma.com/design/3sZE6Ke3MSPwcdrhSLQkgG/...?node-id=2158-22764"
+
+**Action:**
+1. Parse URL → fileId, nodeId
+2. mode=edit, components=["Button"]
+3. Check cache → no cache found
+4. Show user: "📡 Fase 1: Obteniendo datos de Figma API..."
+5. Task: 1-api-fetch → receive backupPath
+6. Show user: "📊 Fase 2: Analizando estructura del diseño..."
+7. Task: 2-data-analyzer → receive analysisPath
+8. Show user: "📝 Fase 4: Generando plan de modificaciones..."
+9. Task: 4-to-edit → receive editPlanPath, changesDetected
+10. Show user: "✅ ¡Completado! Plan de modificaciones guardado en {editPlanPath}"
+
+### Example 3: Mode Edit - Multiple Components
+**Input:** "Compara Button y Card con este diseño: https://...?node-id=2158-22764"
+
+**Action:**
+1. Parse URL → fileId, nodeId
+2. mode=edit, components=["Button", "Card"]
+3. Execute phases 1-2-4
+4. Generate edit plan comparing both components
+5. Report: "✅ 3 cambios detectados en Button, 2 cambios en Card"
+
+### Example 4: Direct API Fetch
 **Input:** "Solo haz fetch de este Figma, no lo proceses"
 
 **Action:**
@@ -162,21 +229,21 @@ When user provides URL without explicit skill request, execute:
 - Task: 1-api-fetch → return backupPath
 - Report: "✅ Datos guardados en {backupPath}"
 
-### Example 3: Cache Hit
+### Example 5: Cache Hit
 **Input:** "Procesa este Figma: [URL ya procesado antes]"
 
 **Action:**
 - Parse URL → find cache in plans/figma-*-{fileId}-{nodeId}.json
 - Show user: "📦 Usando datos en caché. Generando plan..."
-- Task: 3-to-plan (with cached analysisPath)
+- Task: 3-to-plan or 4-to-edit (with cached analysisPath)
 - Show user: "✅ ¡Completado! Plan guardado en {planPath}"
 
-### Example 4: Error Handling
+### Example 6: Error Handling
 **Input:** "Procesa este Figma: https://www.figma.com/design/INVALID/..."
 
 **Action:**
 1. Parse URL → fileId, nodeId
-2. Show user: "📡 Fase 1/3: Obteniendo datos de Figma API..."
+2. Show user: "📡 Fase 1: Obteniendo datos de Figma API..."
 3. Task: 1-api-fetch → receive `{ success: false, error: "Invalid fileId" }`
 4. Stop and report: "❌ Error en Fase 1: Invalid fileId"
 
@@ -193,6 +260,18 @@ const fileId = fileMatch?.[1];
 const nodeId = nodeMatch?.[1]?.replace(/-/g, ':');
 ```
 
+## Mode Detection
+
+```typescript
+// Default mode is create
+const mode = parameters.mode || 'create';
+
+// For edit mode, components is required
+if (mode === 'edit' && !parameters.components) {
+  // Ask user for component names or paths
+}
+```
+
 ## Cache Files
 
 - Location: `plans/figma-{timestamp}-{fileId}-{nodeId}.json`
@@ -204,16 +283,22 @@ const nodeId = nodeMatch?.[1]?.replace(/-/g, ':');
 **API Error:** Report Figma token issues or invalid URLs clearly
 **Invalid URL:** Show expected format
 **Cache Issues:** Automatically fetch fresh data
+**Missing Components (edit mode):** Report which components were not found
 
 </implementation_details>
 
 ## Integration
 
 **Called by:** Main orchestrator at `/skills/orchestrator.md`
-**Calls:** 1-api-fetch, 2-data-analyzer, 3-to-plan (via Task tool)
+**Calls:** 
+- common/1-api-fetch (via Task tool)
+- common/2-data-analyzer (via Task tool)
+- create/3-to-plan (via Task tool, mode=create)
+- edit/4-to-edit (via Task tool, mode=edit)
+
 **Outputs:** 
-- `plans/figma-{timestamp}-{fileId}-{nodeId}.json`
-- `plans/plan-{timestamp}-{fileId}-{nodeId}.md`
+- Mode create: `plans/figma-{timestamp}-{fileId}-{nodeId}.json` + `plans/plan-{timestamp}-{fileId}-{nodeId}.md`
+- Mode edit: `plans/figma-{timestamp}-{fileId}-{nodeId}.json` + `plans/edit-plan-{timestamp}-{fileId}-{nodeId}.md`
 
 ## Task Tool Usage
 
@@ -221,13 +306,13 @@ Each phase is executed via the Task tool. When implementing the workflow, use th
 
 ### Phase 1: API Fetch
 
-**Show user:** "📡 Fase 1/3: Obteniendo datos de Figma API..."
+**Show user:** "📡 Fase 1: Obteniendo datos de Figma API..."
 
 **Execute Task tool:**
 ```
 description: "Figma API Fetch - Get raw data from Figma API"
 prompt: |
-  Read and execute the skill at skills/figma/internal/1-api-fetch.md
+  Read and execute the skill at skills/figma/common/1-api-fetch.md
   
   Parameters:
   - fileId: "{fileId}"
@@ -250,13 +335,13 @@ subagent_type: "general"
 
 ### Phase 2: Data Analysis
 
-**Show user:** "📊 Fase 2/3: Analizando estructura del diseño..."
+**Show user:** "📊 Fase 2: Analizando estructura del diseño..."
 
 **Execute Task tool:**
 ```
 description: "Figma Data Analysis - Process raw data into structured format"
 prompt: |
-  Read and execute the skill at skills/figma/internal/2-data-analyzer.md
+  Read and execute the skill at skills/figma/common/2-data-analyzer.md
   
   Parameters:
   - backupPath: "{backupPath_from_phase1}"
@@ -274,18 +359,18 @@ subagent_type: "general"
 
 **Handle result:**
 - If result.success = false → Report error: "❌ Error en Fase 2: {result.error}"
-- If result.success = true → Store result.analysisPath, continue to Phase 3
+- If result.success = true → Store result.analysisPath, continue to Phase 3 or 4
 
-### Phase 3: Generate Plan
+### Phase 3: Generate Plan (Mode Create)
 
 **Show user:** (if using cache) "📦 Usando datos en caché. Generando plan..."
-**Show user:** (otherwise) "📝 Fase 3/3: Generando plan de implementación..."
+**Show user:** (otherwise) "📝 Fase 3: Generando plan de implementación..."
 
 **Execute Task tool:**
 ```
 description: "Figma to Plan - Generate implementation plan"
 prompt: |
-  Read and execute the skill at skills/figma/internal/3-to-plan.md
+  Read and execute the skill at skills/figma/create/3-to-plan.md
   
   Parameters:
   - analysisPath: "{analysisPath_from_phase2}"
@@ -306,7 +391,39 @@ subagent_type: "general"
 - If result.success = false → Report error: "❌ Error en Fase 3: {result.error}"
 - If result.success = true → Report success: "✅ ¡Completado! Plan guardado en {result.planPath}"
 
-### Success Reporting
+### Phase 4: Generate Edit Plan (Mode Edit)
+
+**Show user:** (if using cache) "📦 Usando datos en caché. Generando plan de modificaciones..."
+**Show user:** (otherwise) "📝 Fase 4: Generando plan de modificaciones..."
+
+**Execute Task tool:**
+```
+description: "Figma to Edit - Generate edit plan for modifications"
+prompt: |
+  Read and execute the skill at skills/figma/edit/4-to-edit.md
+  
+  Parameters:
+  - analysisPath: "{analysisPath_from_phase2}"
+  - components: ["{component1}", "{component2}"]
+  
+  You must:
+  1. Read the skill completely
+  2. Read the analyzed JSON file from the analysisPath
+  3. Read each component file from components array
+  4. Compare properties between Figma and code
+  5. Generate markdown edit plan with before/after
+  6. Save plan to plans/ directory
+  7. Return ONLY the JSON object specified in the Task Tool Interface:
+     { success: true, editPlanPath: "...", changesDetected: N, componentsProcessed: [...], metadata: {...} }
+  8. If error, return: { success: false, error: "description" }
+subagent_type: "general"
+```
+
+**Handle result:**
+- If result.success = false → Report error: "❌ Error en Fase 4: {result.error}"
+- If result.success = true → Report success: "✅ ¡Completado! Plan de modificaciones guardado en {result.editPlanPath}"
+
+### Success Reporting (Mode Create)
 
 After all phases complete successfully:
 ```
@@ -321,10 +438,25 @@ After all phases complete successfully:
    • Prisma components: {stats.prismaComponents.join(', ')}
 ```
 
+### Success Reporting (Mode Edit)
+
+After all phases complete successfully:
+```
+✅ ¡Completado!
+
+📁 Archivos generados:
+   • Datos JSON: {analysisPath}
+   • Plan de Modificaciones: {editPlanPath}
+
+📊 Resumen:
+   • {changesDetected} cambios detectados
+   • Componentes analizados: {componentsProcessed.join(', ')}
+```
+
 ### Error Handling
 
 If any phase fails:
 1. Stop immediately (do not continue to next phase)
 2. Report which phase failed: "❌ Error en Fase {N}: {error_message}"
 3. Include the specific error from the Task result
-4. Suggest next steps (retry, check token, etc.)
+4. Suggest next steps (retry, check token, verify component names for edit mode, etc.)
