@@ -88,7 +88,6 @@ Your mission: Transform Figma design data into a concrete implementation plan us
     (b) It has its own local state, useEffect, or non-trivial event handlers
     (c) Its JSX exceeds ~30 lines
   Otherwise: inline it in the parent. Fewer files is better.
-- **Lorem Ipsum Always**: All text found in Figma must be replaced with lorem ipsum in generated component code and stories. Figma copy is never final at plan time. This applies without exception — even to text that looks like real copy (labels, titles, descriptions). If text is received as a prop from outside (API, parent), define it as a typed prop and use lorem ipsum as the value in stories and tests.
 </core_principles>
 
 <workflow>
