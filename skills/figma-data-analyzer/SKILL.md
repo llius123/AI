@@ -1,12 +1,6 @@
 ---
-name: figma_data_analyzer
-description: "Processes raw Figma API JSON response and extracts structured design data including components, colors, typography, effects, and UI structure. Internal sub-skill used by figma orchestrator."
-category: Integration/Data Processing
-tools:
-  - edit
-  - read
-  - bash
-internal: true
+name: figma-data-analyzer
+description: "Processes raw Figma API JSON response and extracts structured design data including components, colors, typography, effects, and UI structure. Use when you have raw Figma JSON and need to extract structured data for component generation."
 ---
 
 ## Task Tool Interface
@@ -15,8 +9,8 @@ This skill is designed to be called via the Task tool. It reads raw Figma data f
 
 ### Input Parameters (via Task prompt)
 ```yaml
-backupPath: string  # Path absoluto al archivo raw JSON (output de 1-api-fetch)
-                      # Ej: "plans/figma-raw-2026-03-17T10-30-00-abc123-2158-22764.json"
+backupPath: string  # Absolute path to raw JSON file (output from figma-api-fetch)
+                      # e.g., "plans/figma-raw-2026-03-17T10-30-00-abc123-2158-22764.json"
 ```
 
 ### Output Format (JSON)
@@ -36,7 +30,7 @@ backupPath: string  # Path absoluto al archivo raw JSON (output de 1-api-fetch)
     "nodeId": "2158:22764",
     "analyzedAt": "2026-03-17T10:30:00.000Z"
   },
-  "error": "mensaje de error (solo si success=false)"
+  "error": "error message (only if success=false)"
 }
 ```
 
@@ -50,25 +44,25 @@ backupPath: string  # Path absoluto al archivo raw JSON (output de 1-api-fetch)
 
 # Figma Data Analyzer
 
-Procesa la respuesta de la API de Figma y extrae datos estructurados para generación de componentes
+Processes Figma API response and extracts structured data for component generation
 
 ## When to Use This Skill
 
 Use this skill when:
-- Necesitas procesar la respuesta raw de la API de Figma
-- Quieres extraer componentes, estilos y tokens de diseño
-- Necesitas estructurar datos de Figma para generar código
-- La respuesta de la API contiene información no estructurada que necesitas limpiar
+- You need to process the raw Figma API response
+- You want to extract components, styles, and design tokens
+- You need to structure Figma data for code generation
+- The API response contains unstructured information that needs cleaning
 
 ## Capabilities
 
-- Analizar respuesta JSON de la API de Figma
-- Extraer componentes individuales y sus propiedades
-- Identificar estilos (colores, tipografía, efectos)
-- Estructurar tokens de diseño
-- Organizar datos por categorías
-- Guardar resultado en formato JSON limpio
-- **NEW:** Extraer estructura UI completa (frames, textos, jerarquía)
+- Analyze Figma API JSON response
+- Extract individual components and their properties
+- Identify styles (colors, typography, effects)
+- Structure design tokens
+- Organize data by categories
+- Save result in clean JSON format
+- Extract complete UI structure (frames, text, hierarchy)
 
 ## System Prompt
 
@@ -113,7 +107,7 @@ interface FigmaAnalysis {
   components: ComponentData[];
   componentSets: ComponentSetData[];
   
-  // NEW: Complete UI Structure - captures layout, text, and hierarchy
+  // Complete UI Structure - captures layout, text, and hierarchy
   uiStructure: {
     frames: FrameData[];           // All FRAME and GROUP nodes (containers)
     textElements: TextData[];      // All TEXT nodes (labels, descriptions)
@@ -126,7 +120,6 @@ interface FigmaAnalysis {
     totalComponents: number;
     totalStyles: number;
     totalComponentSets: number;
-    // NEW:
     totalFrames: number;
     totalTextElements: number;
     totalInstances: number;
@@ -443,35 +436,35 @@ Output summary to user:
 - File location
 - Total components extracted
 - Total styles extracted
-- **NEW:** Total frames, text elements, and instances found
+- Total frames, text elements, and instances found
 - Categories found
 - Key UI elements detected (headers, buttons, descriptions)
 - Next steps suggestion
 
 **Example output:**
 ```
-Análisis completado. Datos guardados en: plans/figma-2026-03-10T10-30-00.json
+Analysis completed. Data saved to: plans/figma-2026-03-10T10-30-00.json
 
-Resumen:
-- 6 componentes (Icons: 6)
-- 12 estilos (Colores: 6, Tipografía: 5, Efectos: 1)
-- 0 sets de componentes
+Summary:
+- 6 components (Icons: 6)
+- 12 styles (Colors: 6, Typography: 5, Effects: 1)
+- 0 component sets
 
-Estructura UI:
+UI Structure:
 - 17 frames/containers
-- 8 elementos de texto
-- 6 instancias de componentes
-- 17 vectores/iconos
+- 8 text elements
+- 6 component instances
+- 17 vectors/icons
 
-Elementos detectados:
+Elements detected:
 - Header: "Prime Vibe Match. Powered by AI."
-- 6 botones de vibes (Play, Relax, Explore, Space, Budget)
-- Descripción de feature
-- Layout: Card con secciones verticales
+- 6 vibe buttons (Play, Relax, Explore, Space, Budget)
+- Feature description
+- Layout: Card with vertical sections
 
-Categorías encontradas: Arrows, Places, Sports, Amenities, Deals
+Categories found: Arrows, Places, Sports, Amenities, Deals
 
-Próximo paso: Usa @skills/figma/to-plan para generar plan de implementación.
+Next step: Use @figma-to-plan to generate implementation plan.
 ```
 
 </workflow>
@@ -530,15 +523,15 @@ If analysis fails:
 
 **Output:** 
 ```
-Análisis completado. Datos guardados en: plans/figma-2026-03-10T10-30-00.json
+Analysis completed. Data saved to: plans/figma-2026-03-10T10-30-00.json
 
-Resumen:
-- 6 componentes (Icons: 6)
-- 12 estilos (Colores: 6, Tipografía: 5, Efectos: 1)
-- 0 sets de componentes
-- Categorías encontradas: Arrows, Places, Sports, Amenities, Deals
+Summary:
+- 6 components (Icons: 6)
+- 12 styles (Colors: 6, Typography: 5, Effects: 1)
+- 0 component sets
+- Categories found: Arrows, Places, Sports, Amenities, Deals
 
-Próximo paso: Usa @skills/figma/pipeline para orquestar el flujo completo.
+Next step: Use @figma-to-plan to generate implementation plan.
 ```
 
 ### Example 2
@@ -550,16 +543,14 @@ Próximo paso: Usa @skills/figma/pipeline para orquestar el flujo completo.
 - Groups related components under their parent set
 - Documents variant combinations
 
-</skill>
-
 ## Integration Notes
 
 This skill is typically called by:
-- **pipeline**: As part of the orchestrated workflow
+- **processing-figma**: As part of the orchestrated workflow
 - Manual invocation: When user has raw API data to analyze
 
 Next skill in pipeline:
-- **to-plan**: Will read the generated JSON to create implementation plan
+- **figma-to-plan**: Will read the generated JSON to create implementation plan
 
 ---
 

@@ -1,34 +1,9 @@
 ---
-name: plan
-description: "Researches and creates detailed multi-step plans before implementation. Use when the user needs planning, strategy, a roadmap, or wants to understand how to approach a complex or unclear task before writing any code."
-category: Planning
-triggers:
-  - plan
-  - outline
-  - research
-  - strategy
-  - how to
-  - roadmap
-tools:
-  - agent
-  - search
-  - read
-  - execute
-  - web
-  - github
-  - askQuestions
-parameters:
-  - name: task
-    type: string
-    description: "Describe the task or goal you want to plan"
-    required: true
-  - name: context
-    type: string
-    description: "Additional context, constraints, or relevant files/symbols"
-    required: false
+name: planning
+description: "Researches and creates detailed multi-step plans through clarification. Use when the user needs planning, strategy, a roadmap, or wants to understand how to approach a complex or unclear task before writing any code. Triggers: plan, outline, research, strategy, roadmap, how to."
 ---
 
-# Plan
+# Planning
 
 Researches and outlines multi-step plans before implementation
 
@@ -52,6 +27,21 @@ Use this skill when:
 - Present alternatives for user decision
 - Iterate on plans based on feedback
 - Focus on essential info, skip nice-to-haves
+
+## Required Tools
+
+- agent
+- search
+- read
+- execute
+- web
+- github
+- askQuestions
+
+## Parameters
+
+- **task** (string, required): Describe the task or goal you want to plan
+- **context** (string, optional): Additional context, constraints, or relevant files/symbols
 
 ## System Prompt
 

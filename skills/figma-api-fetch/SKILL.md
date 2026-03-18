@@ -1,11 +1,6 @@
 ---
-name: figma_api_fetch
-description: "Fetches raw data from Figma API for a given file and node. Internal sub-skill used by figma orchestrator."
-category: Integration/API
-tools:
-  - webfetch
-  - websearch
-internal: true
+name: figma-api-fetch
+description: "Fetches raw data from Figma API for a given file and node. Use when you need to get fresh data from Figma API."
 ---
 
 ## Task Tool Interface
@@ -14,9 +9,9 @@ This skill is designed to be called via the Task tool. It accepts input paramete
 
 ### Input Parameters (via Task prompt)
 ```yaml
-fileId: string      # ID del archivo Figma (ej: "3sZE6Ke3MSPwcdrhSLQkgG")
-nodeId: string      # ID del nodo (ej: "2158:22764")
-figmaToken: string  # Token de autenticación de Figma
+fileId: string      # Figma file ID (e.g., "3sZE6Ke3MSPwcdrhSLQkgG")
+nodeId: string      # Node ID (e.g., "2158:22764")
+figmaToken: string  # Figma authentication token
 ```
 
 ### Output Format (JSON)
@@ -30,7 +25,7 @@ figmaToken: string  # Token de autenticación de Figma
     "fetchedAt": "ISO-8601-timestamp",
     "apiUrl": "https://api.figma.com/v1/files/..."
   },
-  "error": "mensaje de error (solo si success=false)"
+  "error": "error message (only if success=false)"
 }
 ```
 
@@ -44,7 +39,7 @@ figmaToken: string  # Token de autenticación de Figma
 
 # Figma API Fetch
 
-Cómo hacer fetch a la API de Figma
+How to fetch from Figma API
 
 ## How to Call Figma API
 

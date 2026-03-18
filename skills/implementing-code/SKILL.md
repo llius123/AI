@@ -1,40 +1,9 @@
 ---
-name: write
-description: "Autonomously implements features, fixes bugs, and refactors code with senior engineer standards. Use when the user asks to implement, build, create, fix, debug, or refactor — especially for multi-file changes that require scanning the codebase."
-category: Execution/Implementation
-triggers:
-  - implement
-  - build
-  - create
-  - execute
-  - develop
-  - code
-  - fix
-  - debug
-  - refactor
-tools:
-  - edit_file
-  - terminal
-  - grep
-  - find_path
-  - diagnostics
-  - read_file
-parameters:
-  - name: task
-    type: string
-    description: "What to implement, fix, or refactor — be specific"
-    required: true
-  - name: plan
-    type: string
-    description: "Reference to an existing plan (from the plan skill) to execute, if any"
-    required: false
-  - name: context
-    type: string
-    description: "Relevant file paths, symbols, or constraints"
-    required: false
+name: implementing-code
+description: "Autonomously implements features, fixes bugs, and refactors code with senior engineer standards. Use when the user asks to implement, build, create, fix, debug, or refactor — especially for multi-file changes that require scanning the codebase. Triggers: implement, build, create, execute, develop, code, fix, debug, refactor."
 ---
 
-# Write
+# Implementing Code
 
 Autonomous implementation with senior engineer standards
 
@@ -56,6 +25,21 @@ Use this skill when:
 - Zero-trust verification (always verify before marking complete)
 - Autonomous bug fixing (immediate resolution upon detection)
 - Defensive programming and elegance checks
+
+## Required Tools
+
+- edit_file
+- terminal
+- grep
+- find_path
+- diagnostics
+- read_file
+
+## Parameters
+
+- **task** (string, required): What to implement, fix, or refactor — be specific
+- **plan** (string, optional): Reference to an existing plan (from the plan skill) to execute, if any
+- **context** (string, optional): Relevant file paths, symbols, or constraints
 
 ## System Prompt
 
@@ -91,11 +75,11 @@ Your mission: Execute tasks with discipline, find root causes, and deliver produ
 
 ## Execution Workflow
 
-Write skill is pure execution. Planning happens in the plan skill.
+This skill is pure execution. Planning happens in the planning skill.
 
 1. **Understand the Task**
    - Read the request carefully
-   - If a plan exists (from plan skill), reference it
+   - If a plan exists (from planning skill), reference it
    - If task is complex but no plan exists → suggest user create plan first
    - For simple tasks, proceed directly
 
@@ -122,8 +106,6 @@ Write skill is pure execution. Planning happens in the plan skill.
    - Provide evidence of verification
 
 </workflow>
-
-
 
 <autonomous_bug_fixing>
 

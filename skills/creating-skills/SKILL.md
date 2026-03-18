@@ -1,40 +1,9 @@
 ---
-name: write_a_skill
-description: "Meta-skill for creating new agent skills with the correct structure, metadata, and routing-optimised descriptions. Use when the user wants to create, write, or build a new skill for the orchestrator."
-category: Meta/Development
-triggers:
-  - create skill
-  - write skill
-  - new skill
-  - build skill
-  - skill development
-  - make skill
-tools:
-  - edit_file
-  - create_directory
-  - read_file
-  - list_directory
-  - askQuestions
-parameters:
-  - name: skillName
-    type: string
-    description: "Name of the new skill to create"
-    required: true
-  - name: purpose
-    type: string
-    description: "What should this skill do? Describe its domain and goals"
-    required: true
-  - name: triggers
-    type: string
-    description: "Keywords or phrases that should route to this skill (comma-separated)"
-    required: false
-  - name: examples
-    type: string
-    description: "1-3 concrete example use cases for this skill"
-    required: false
+name: creating-skills
+description: "Meta-skill for creating new agent skills with the correct structure, metadata, and routing-optimized descriptions. Use when the user wants to create, write, or build a new skill to extend agent capabilities. Triggers: create skill, write skill, new skill, build skill, skill development, make skill."
 ---
 
-# Write-a-Skill
+# Creating Skills
 
 Meta-skill for creating new agent skills with proper structure and best practices
 
@@ -56,6 +25,21 @@ Use this skill when:
 - Determine when to add utility scripts vs split reference files
 - Ensure consistency with existing skill format
 - Validate skill structure against quality checklist
+
+## Required Tools
+
+- edit_file
+- create_directory
+- read_file
+- list_directory
+- askQuestions
+
+## Parameters
+
+- **skillName** (string, required): Name of the new skill to create
+- **purpose** (string, required): What should this skill do? Describe its domain and goals
+- **triggers** (string, optional): Keywords or phrases that should route to this skill (comma-separated)
+- **examples** (string, optional): 1-3 concrete example use cases for this skill
 
 ## System Prompt
 
@@ -92,10 +76,10 @@ Based on requirements, determine:
 **File Structure:**
 ```
 skill-name/
-├── skill-name.md       # Main file (REQUIRED, under 150 lines)
-├── REFERENCE.md        # Detailed docs (if main > 150 lines)
-├── EXAMPLES.md         # Extended examples (if needed)
-└── scripts/            # Utility scripts (if needed)
+├── SKILL.md       # Main file (REQUIRED, under 150 lines)
+├── REFERENCE.md   # Detailed docs (if main > 150 lines)
+├── EXAMPLES.md    # Extended examples (if needed)
+└── scripts/       # Utility scripts (if needed)
     └── helper.js
 ```
 
@@ -114,15 +98,14 @@ skill-name/
 Create skill file following this exact structure:
 
 ```markdown
+---
+name: skill-name
+description: "What it does. Use when [scenarios]. Triggers: [keywords]."
+---
+
 # Skill Name
 
 Brief tagline describing the skill
-
-## Metadata
-
-- **Category:** [Category/Subcategory]
-- **Triggers:** trigger1, trigger2, trigger3, ...
-- **Tools:** tool1, tool2, tool3, ...
 
 ## When to Use This Skill
 
@@ -136,6 +119,17 @@ Use this skill when:
 - [Capability 1]
 - [Capability 2]
 - [Capability 3]
+
+## Required Tools
+
+- tool1
+- tool2
+- tool3
+
+## Parameters
+
+- **param1** (string, required): Description
+- **param2** (string, optional): Description
 
 ## System Prompt
 
@@ -174,14 +168,6 @@ Your mission: [mission statement]
 - [Action 1]
 - [Action 2]
 - [Result]
-
-### Example 2
-**Input:** "[example user request]"
-
-**What the skill does:**
-- [Action 1]
-- [Action 2]
-- [Result]
 ```
 
 **Critical: Description Requirements**
@@ -214,9 +200,8 @@ Present the draft and ask:
 ## 5. Quality Check
 
 Before finalizing, verify:
-- [ ] Metadata includes Category, Triggers, Tools
-- [ ] "When to Use This Skill" has clear scenarios
 - [ ] Description includes triggers ("Use when...")
+- [ ] "When to Use This Skill" has clear scenarios
 - [ ] Main file under 150 lines
 - [ ] No time-sensitive information
 - [ ] Consistent terminology throughout
