@@ -139,8 +139,12 @@ interface FigmaAnalysis {
 
 For each component in `nodes[nodeId].components`:
 - Extract: id, name, type (infer from name), category, description
-- Parse name to determine category (e.g., "Arrows/Chevron-Up" → category: "Arrows")
+- Parse name to determine category (e.g. "Arrows/Chevron-Up" → category: "Arrows")
 - Note: type can be "ICON", "BUTTON", "INPUT", "CARD", etc. (infer from context)
+- **Add component ID to processedComponents Set to avoid re-processing during traversal**
+  ```typescript
+  processedComponents.add(component.id);
+  ```
 
 ## 3.5 Process UI Structure (CRITICAL - Don't Skip!)
 
@@ -148,6 +152,11 @@ This step extracts the complete visual hierarchy including frames, text, and lay
 **Many designs have UI elements that are NOT components** (headers, buttons with text, descriptions, etc.)
 
 **Traverse the node tree recursively:**
+
+**IMPORTANT: Initialize the Set before calling traverseNode:**
+```typescript
+const processedComponents = new Set();
+```
 
 ```typescript
 function traverseNode(node, parentId = null, depth = 0) {
